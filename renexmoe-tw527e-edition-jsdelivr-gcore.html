@@ -272,6 +272,12 @@
           <!--constStr@Home-->
         </a>
       </li>
+      <!--UploadJsStart-->
+      <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#upload_dialog'}">
+        <a class="mdui-list-item-icon mdui-icon material-icons">cloud_upload</a><a
+          class="mdui-list-item-content"><!--constStr@Upload--></a>
+      </li>
+      <!--UploadJsEnd-->
       <!--MultiDiskAreaStart-->
       <div class="mdui-divider"></div>
       <!--MultiDisksStart-->
@@ -347,6 +353,35 @@
       </div>
     </div>
     <!--LoginEnd-->
+    <!--UploadJsStart-->
+    <div class="mdui-dialog" id="upload_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload--></div>
+      <div class="mdui-dialog-content">
+        <div class="mdui-row mdui-text-center" style="padding-bottom: 8px">
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 8px">
+            <button class="mdui-btn mdui-btn-outlined mdui-ripple" onclick="rnxUploadType(0);">
+              <i class="mdui-icon material-icons">note_add</i>&nbsp;<!--constStr@UploadFile-->
+            </button>
+          </div>
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 8px">
+            <button class="mdui-btn mdui-btn-outlined mdui-ripple" onclick="rnxUploadType(1);">
+              <i class="mdui-icon material-icons">create_new_folder</i>&nbsp;<!--constStr@UploadFolder-->
+            </button>
+          </div>
+        </div>
+        <input id="upload_file" type="file" name="upload_filename" multiple="multiple" hidden>
+        <span id="upload_file_label" class="mdui-typo-caption"></span>
+        <br><br>
+        <button id="upload_submit" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme" onclick="preup();">
+          <i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload-->
+        </button>
+        <div id="upload_list" style="margin-top: 8px"></div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close id="upload_close"><!--constStr@Close--></button>
+      </div>
+    </div>
+    <!--UploadJsEnd-->
     <!--EncryptedStart-->
     <div class="mdui-center" style="margin: 20px auto;max-width: 600px;">
       <br />
@@ -810,6 +845,413 @@
 <script>
   window.renexmoe.toggle_theme();
 </script>
+
+<!--UploadJsStart-->
+<script>
+  var rnxFiles = [];
+  var rnxUploading = {};
+  var rnxTotalCount = 0;
+  var rnxDoneCount = 0;
+  function rnxSizeFormat(num) {
+    if (num > 1024) { num = num / 1024; } else { return num.toFixed(2) + ' B'; }
+    if (num > 1024) { num = num / 1024; } else { return num.toFixed(2) + ' KB'; }
+    if (num > 1024) { num = num / 1024; } else { return num.toFixed(2) + ' MB'; }
+    return num.toFixed(2) + ' GB';
+  }
+  function rnxSeconds2hour(seconds) {
+    var h, m, s;
+    if (parseFloat(seconds) < 60) return seconds + 's';
+    s = (seconds % 60).toFixed(0);
+    m = parseInt(seconds / 60);
+    if (parseInt(m) < 60) return m + 'm' + s + 's';
+    h = parseInt(m / 60);
+    m = m % 60;
+    return h + 'h' + m + 'm' + s + 's';
+  }
+  function rnxExt(str) {
+    var arr = str.split('.');
+    if (arr.length == 1) return '';
+    var ext = arr[arr.length - 1].toLowerCase();
+    var a = str.replace(/\./g, '');
+    if (a == ext) return '';
+    return '.' + ext;
+  }
+  function rnxUploadType(folder) {
+    var inp = document.getElementById('upload_file');
+    if (!inp) return;
+    inp.multiple = true;
+    inp.webkitdirectory = folder ? true : false;
+    inp.value = '';
+    inp.click();
+  }
+  function preup() {
+    var inp = document.getElementById('upload_file');
+    if (!inp || !inp.files || inp.files.length < 1) return;
+    rnxFiles = Array.prototype.slice.call(inp.files);
+    inp.value = '';
+    rnxTotalCount = rnxFiles.length;
+    rnxDoneCount = 0;
+    rnxUploading = {};
+    var list = document.getElementById('upload_list');
+    list.innerHTML = '';
+    var st = document.createElement('div');
+    st.id = 'upload_batch_status';
+    st.className = 'mdui-typo-caption mdui-text-center';
+    st.style.padding = '4px 0';
+    st.innerHTML = rnxDoneCount + '/' + rnxTotalCount;
+    list.appendChild(st);
+    var ul = document.createElement('ul');
+    ul.className = 'mdui-list';
+    ul.id = 'upload-list-ul';
+    list.appendChild(ul);
+    var i = 0;
+    var timer = setInterval(function () {
+      if (i < rnxFiles.length) {
+        if (Object.keys(rnxUploading).length < 5) {
+          rnxMakeRow(i);
+          rnxUploading[i] = i;
+          if (typeof window.rnxDriverUpload === 'function') window.rnxDriverUpload(i);
+          else rnxUploadDone(i, false, 'driver not supported');
+          i++;
+        }
+      } else clearInterval(timer);
+    }, 300);
+  }
+  function rnxMakeRow(i) {
+    var file = rnxFiles[i];
+    var ul = document.getElementById('upload-list-ul');
+    var li = document.createElement('li');
+    li.className = 'mdui-list-item';
+    li.id = 'upfile_li_' + i;
+    li.style.borderRadius = '4px';
+    var name = file.webkitRelativePath || file.name;
+    li.innerHTML = '<div class="mdui-list-item-content" style="width:100%">'
+      + '<div class="mdui-typo-subheading mdui-text-truncate" id="upfile_td1_' + i + '">' + name
+      + '<span class="mdui-typo-caption"> (' + rnxSizeFormat(file.size) + ', ' + (i + 1) + '/' + rnxFiles.length + ')</span></div>'
+      + '<div class="mdui-typo-caption" id="upfile_td2_' + i + '"></div></div>';
+    ul.appendChild(li);
+  }
+  function rnxSetRowStatus(i, html) {
+    var td2 = document.getElementById('upfile_td2_' + i);
+    if (td2) td2.innerHTML = html;
+  }
+  function rnxSetRowProgress(i, percent) {
+    var li = document.getElementById('upfile_li_' + i);
+    if (li) li.style.background = 'linear-gradient(to right, rgba(0,0,0,25%) ' + percent + '%, rgba(0,0,0,0%) 0%)';
+  }
+  function rnxUploadDone(i, ok, msg) {
+    delete rnxUploading[i];
+    rnxDoneCount++;
+    var st = document.getElementById('upload_batch_status');
+    if (st) st.innerHTML = rnxDoneCount + '/' + rnxTotalCount;
+    if (!ok) rnxSetRowStatus(i, '<font color="red">' + msg + '</font>');
+    if (rnxDoneCount >= rnxTotalCount) {
+      if (st) st.innerHTML = rnxDoneCount + '/' + rnxTotalCount + ' - <!--constStr@UploadComplete-->';
+      window.location.reload();
+    }
+  }
+  var rnxUploadFileEl = document.getElementById('upload_file');
+  if (rnxUploadFileEl) rnxUploadFileEl.addEventListener('change', function () {
+    var l = document.getElementById('upload_file_label');
+    if (l) l.innerHTML = this.files.length + ' / ' + (this.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
+  });
+</script>
+<!--UploadJsEnd-->
+
+<!--OnedriveUploadJsStart-->
+<script src="?jsFile=spark-md5.min.js"></script>
+<script>
+  window.rnxDriverUpload = async function (i) {
+    var file = rnxFiles[i];
+    if (file.size > 100 * 1024 * 1024 * 1024) {
+      rnxSetRowStatus(i, '<font color="red"><!--constStr@UpFileTooLarge--></font>');
+      rnxUploadDone(i, false, '<!--constStr@UpFileTooLarge-->');
+      return;
+    }
+    var upbigfilename = encodeURIComponent(file.webkitRelativePath || file.name);
+    var filemd5 = '';
+    /*--GuestStart--*/
+    rnxSetRowStatus(i, '<!--constStr@Calculate--> md5');
+    filemd5 = await new Promise(function (resolve, reject) {
+      var spark = new SparkMD5.ArrayBuffer();
+      var reader = new FileReader();
+      var chunksize = 10 * 1024 * 1024;
+      var asize = 0;
+      function readblob(start) {
+        var end = Math.min(start + chunksize, file.size);
+        reader.readAsArrayBuffer(file.slice(start, end));
+      }
+      reader.onload = function () {
+        spark.append(this.result);
+        asize += chunksize;
+        rnxSetRowStatus(i, 'md5: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
+        if (asize < file.size) readblob(asize);
+        else resolve(spark.end());
+      };
+      reader.onerror = reject;
+      readblob(0);
+    });
+    upbigfilename = filemd5 + rnxExt(file.webkitRelativePath || file.name);
+    /*--GuestEnd--*/
+    try {
+      rnxSetRowStatus(i, '<!--constStr@GetUploadLink--> ...');
+      var resp = await fetch('?action=upbigfile', {
+        method: 'POST',
+        headers: { 'x-requested-with': 'XMLHttpRequest' },
+        body: 'upbigfilename=' + upbigfilename + '&filesize=' + file.size + '&filelastModified=' + file.lastModified + '&filemd5=' + filemd5 + '&_admin=' + localStorage.getItem('admin')
+      });
+      var text = await resp.text();
+      if (resp.status == 200) {
+        if (text == '') {
+          rnxSetRowStatus(i, '<font color="green"><!--constStr@UploadComplete--></font>');
+          rnxUploadDone(i, true);
+          return;
+        }
+        var html = JSON.parse(text);
+        if (!html['uploadUrl']) { rnxUploadDone(i, false, text); return; }
+        rnxSetRowStatus(i, '<!--constStr@UploadStart--> ...');
+        await rnxOnedriveBinup(file, html['uploadUrl'], i, upbigfilename);
+      } else if (resp.status == 409) {
+        rnxSetRowStatus(i, '<font color="green"><!--constStr@UploadComplete--></font>');
+        rnxUploadDone(i, true);
+      } else {
+        rnxUploadDone(i, false, text);
+      }
+    } catch (err) {
+      rnxUploadDone(i, false, String(err));
+    }
+  };
+  async function rnxOnedriveBinup(file, url, i, filename) {
+    var total = file.size;
+    var chunksize = 10 * 1024 * 1024;
+    var start = 0;
+    try {
+      var gr = await fetch(url);
+      if (gr.status == 200) {
+        var j = await gr.json();
+        if (j['nextExpectedRanges'] && j['nextExpectedRanges'][0]) {
+          var a = j['nextExpectedRanges'][0];
+          start = Number(a.slice(0, a.indexOf('-')));
+        }
+      } else { rnxUploadDone(i, false, await gr.text()); return; }
+      var t0 = new Date().getTime();
+      var finished = false;
+      var retry = 0;
+      while (start < total && !finished) {
+        var end = Math.min(start + chunksize, total) - 1;
+        var pr = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total },
+          body: file.slice(start, end + 1)
+        });
+        if (pr.status >= 500) {
+          retry++;
+          if (retry > 30) { rnxUploadDone(i, false, 'HTTP ' + pr.status); return; }
+          continue;
+        }
+        retry = 0;
+        var pt = await pr.text();
+        var pj = null;
+        try { pj = JSON.parse(pt); } catch (e) {}
+        if (pj && pj['size'] && pj['size'] > 0) {
+          finished = true;
+        } else if (pj && pj['nextExpectedRanges'] && pj['nextExpectedRanges'][0]) {
+          var a2 = pj['nextExpectedRanges'][0];
+          start = Number(a2.slice(0, a2.indexOf('-')));
+        } else {
+          var speed = (end + 1) * 1000 / (new Date().getTime() - t0);
+          rnxSetRowProgress(i, ((end + 1) * 100 / total).toFixed(2));
+          rnxSetRowStatus(i, '<!--constStr@Upload--> ' + rnxSizeFormat(end + 1) + ' / ' + rnxSizeFormat(total)
+            + ' = ' + ((end + 1) * 100 / total).toFixed(2) + '% <!--constStr@Expect--> ' + rnxSeconds2hour(((total - end - 1) / speed).toFixed(1)));
+          start = end + 1;
+          if (speed > 10 * 1024 * 1024) chunksize = 50 * 1024 * 1024;
+          else if (speed > 5 * 1024 * 1024) chunksize = 20 * 1024 * 1024;
+        }
+      }
+      if (finished || start >= total) {
+        if (total > 10 * 1024 * 1024) {
+          try {
+            await fetch('?action=del_upload_cache&filelastModified=' + file.lastModified + '&filesize=' + file.size + '&filename=' + filename, { headers: { 'x-requested-with': 'XMLHttpRequest' } });
+          } catch (e) {}
+        }
+        rnxSetRowProgress(i, 100);
+        rnxSetRowStatus(i, '<font color="green"><!--constStr@UploadComplete--></font>');
+        rnxUploadDone(i, true);
+      }
+    } catch (err) {
+      rnxUploadDone(i, false, String(err));
+    }
+  }
+</script>
+<!--OnedriveUploadJsEnd-->
+
+<!--AliyundriveUploadJsStart-->
+<script src="?jsFile=bignumber.min.js"></script>
+<script src="?jsFile=sha1.min.js"></script>
+<script>
+  window.rnxDriverUpload = async function (i) {
+    var file = rnxFiles[i];
+    var upbigfilename = encodeURIComponent(file.webkitRelativePath || file.name);
+    var chunksize = 10 * 1024 * 1024;
+    var filesha1 = '';
+    rnxSetRowStatus(i, '<!--constStr@Calculate--> sha1');
+    filesha1 = await new Promise(function (resolve, reject) {
+      var spark = sha1.create();
+      var reader = new FileReader();
+      var asize = 0;
+      function readblob(start) {
+        var end = Math.min(start + chunksize, file.size);
+        reader.readAsArrayBuffer(file.slice(start, end));
+      }
+      reader.onload = function () {
+        spark.update(this.result);
+        asize += chunksize;
+        rnxSetRowStatus(i, 'sha1: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
+        if (asize < file.size) readblob(asize);
+        else resolve(spark.hex());
+      };
+      reader.onerror = reject;
+      readblob(0);
+    });
+    /*--GuestStart--*/
+    upbigfilename = filesha1 + rnxExt(file.webkitRelativePath || file.name);
+    /*--GuestEnd--*/
+    var proof_code = '';
+    try {
+      proof_code = await rnxCalcProof(file);
+    } catch (e) { rnxUploadDone(i, false, e); return; }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(filesha1)); } catch (e) {}
+    if (saved && saved['part_info_list']) {
+      await rnxAliyundriveBinup(file, saved, i, upbigfilename, filesha1, chunksize);
+      return;
+    }
+    try {
+      rnxSetRowStatus(i, '<!--constStr@GetUploadLink--> ...');
+      var resp = await fetch('?action=upbigfile', {
+        method: 'POST',
+        headers: { 'x-requested-with': 'XMLHttpRequest' },
+        body: 'upbigfilename=' + upbigfilename + '&filesize=' + file.size + '&filelastModified=' + file.lastModified + '&proof_code=' + proof_code + '&filesha1=' + filesha1 + '&chunksize=' + chunksize + '&_admin=' + localStorage.getItem('admin')
+      });
+      var text = await resp.text();
+      if (resp.status == 201) {
+        if (text == '') {
+          rnxSetRowStatus(i, '<font color="green"><!--constStr@UploadComplete--></font>');
+          rnxUploadDone(i, true);
+          return;
+        }
+        var html = JSON.parse(text);
+        if (html['part_info_list']) {
+          localStorage.setItem(filesha1, JSON.stringify(html));
+          await rnxAliyundriveBinup(file, html, i, upbigfilename, filesha1, chunksize);
+        } else if (html.name != '') {
+          rnxSetRowStatus(i, '<font color="green">' + (html.rapid_upload ? html.name + ' 秒傳' : (html.exist ? html.name + ' <!--constStr@UploadComplete-->' : text)) + '</font>');
+          rnxUploadDone(i, true);
+        } else {
+          rnxUploadDone(i, false, text);
+        }
+      } else {
+        rnxUploadDone(i, false, text);
+      }
+    } catch (err) {
+      rnxUploadDone(i, false, String(err));
+    }
+  };
+  function rnxCalcProof(file) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", '?action=upbigfile');
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+      xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          try {
+            var r = new BigNumber("0x".concat(xhr.responseText));
+            var off = r.mod(new BigNumber(file.size)).toNumber();
+            var rd = new FileReader();
+            rd.onload = function () {
+              var p = this.result;
+              p = p.substr(p.indexOf('base64,') + 7);
+              resolve(p);
+            };
+            rd.onerror = reject;
+            rd.readAsDataURL(file.slice(off, off + 8));
+          } catch (e) { reject(String(e)); }
+        } else reject(xhr.status + ' calc proof');
+      };
+      xhr.onerror = function () { reject('network error'); };
+      xhr.send('CalcProof=1');
+    });
+  }
+  async function rnxAliyundriveBinup(file, res, i, filename, filesha1, chunksize) {
+    if (!('ETag' in res)) res['ETag'] = [];
+    var fileid = res['file_id'];
+    var uploadid = res['upload_id'];
+    var total = file.size;
+    var chunknum = 0;
+    while (res['ETag'][chunknum] != null) chunknum++;
+    var start = chunknum * chunksize;
+    var t0 = new Date().getTime();
+    var retry = 0;
+    try {
+      while (start < total) {
+        var end = Math.min(start + chunksize, total) - 1;
+        var pr = await fetch(res['part_info_list'][chunknum]['upload_url'], {
+          method: 'PUT',
+          headers: { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total },
+          body: file.slice(start, end + 1)
+        });
+        if (pr.status >= 500) {
+          retry++;
+          if (retry > 30) { rnxUploadDone(i, false, 'HTTP ' + pr.status); return; }
+          continue;
+        }
+        retry = 0;
+        var etag = pr.headers.get('ETag');
+        if (etag) {
+          res['ETag'][chunknum] = etag;
+          localStorage.setItem(filesha1, JSON.stringify(res));
+          chunknum++;
+          start = end + 1;
+          var speed = start * 1000 / (new Date().getTime() - t0);
+          rnxSetRowProgress(i, (start * 100 / total).toFixed(2));
+          rnxSetRowStatus(i, '<!--constStr@Upload--> ' + rnxSizeFormat(start) + ' / ' + rnxSizeFormat(total) + ' = ' + (start * 100 / total).toFixed(2) + '% <!--constStr@AverageSpeed-->: ' + rnxSizeFormat(speed) + '/s');
+        } else if (pr.status == 409) {
+          var txt = await pr.text();
+          var m = txt.match(/<PartEtag>([\s\S]*?)<\/PartEtag>/);
+          if (m) {
+            res['ETag'][chunknum] = m[1];
+            localStorage.setItem(filesha1, JSON.stringify(res));
+            chunknum++;
+            start = end + 1;
+          } else {
+            rnxUploadDone(i, false, 'HTTP ' + pr.status);
+            return;
+          }
+        } else {
+          rnxUploadDone(i, false, 'HTTP ' + pr.status + ' ' + (await pr.text()));
+          return;
+        }
+      }
+      var fin = await fetch('?action=upbigfile', {
+        method: 'POST',
+        headers: { 'x-requested-with': 'XMLHttpRequest' },
+        body: 'uploadid=' + uploadid + '&fileid=' + fileid + '&etag=' + JSON.stringify(res['ETag']) + '&_admin=' + localStorage.getItem('admin')
+      });
+      if (fin.status == 200) {
+        localStorage.removeItem(filesha1);
+        rnxSetRowProgress(i, 100);
+        rnxSetRowStatus(i, '<font color="green"><!--constStr@UploadComplete--></font>');
+        rnxUploadDone(i, true);
+      } else {
+        rnxUploadDone(i, false, await fin.text());
+      }
+    } catch (err) {
+      rnxUploadDone(i, false, String(err));
+    }
+  }
+</script>
+<!--AliyundriveUploadJsEnd-->
 
 <!--customScript-->
 </html>
