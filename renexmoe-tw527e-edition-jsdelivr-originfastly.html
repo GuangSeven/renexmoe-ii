@@ -29,8 +29,8 @@
   <meta name="keywords" content="<!--Keywords-->" />
   <meta name="description" content="<!--Description-->" />
 
-  <link rel="stylesheet" href="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/css/app1@uw34ru4ehdn4pywddmebm79dnnb2jyei.css" />
-  <link rel="stylesheet" href="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/css/app2@eqge353pwpgivauvcvzejwrki4mdissj.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/css/app1@uw34ru4ehdn4pywddmebm79dnnb2jyei.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/css/app2@eqge353pwpgivauvcvzejwrki4mdissj.css" />
 
   <link rel="stylesheet" href="//originfastly.jsdelivr.net/@fontsource/noto-sans-tc/500.css" />
   <link rel="stylesheet" href="//originfastly.jsdelivr.net/@fontsource/noto-sans-sc/500.css" />
@@ -290,13 +290,13 @@
       <!--MultiDisksEnd-->
       <div class="mdui-divider"></div>
       <!--MultiDiskAreaEnd-->
-      <a target="_blank" href="https://github.com/qkqpttgf/OneManager-php" class="mdui-list-item mdui-ripple">
+      <a target="_blank" href="https://github.com/GuangSeven" class="mdui-list-item mdui-ripple">
         <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
         <div class="mdui-list-item-content">GitHub</div>
       </a>
       <li class="mdui-list-item mdui-ripple" id="about_theme">
         <i class="mdui-list-item-icon mdui-icon material-icons">info</i>
-        <div class="mdui-list-item-content">關於主題</div>
+        <div class="mdui-list-item-content">关于主题</div>
       </li>
       <div class="mdui-divider"></div>
       <li class="mdui-list-item mdui-ripple" id="select_language" style="overflow: visible;">
@@ -327,7 +327,7 @@
       <li class="mdui-menu-item">
         <a href="javascript:;" class="mdui-ripple back">
           <i class="mdui-menu-item-icon mdui-icon material-icons">arrow_back</i>
-          返回上一頁
+          返回上一页
         </a>
       </li>
     </ul>
@@ -387,7 +387,7 @@
       <br />
       <center>
         <div class="mdui-typo-title">
-          這是一個受保護的資料夾，您需要提供訪問密碼才能檢視。
+          这是一个受保护的文件夹，您需要提供访问密码才能查看。
         </div>
       </center>
       <form action="" method="post">
@@ -558,7 +558,7 @@
         copyText.select();
         document.execCommand("copy");
         document.getElementById("copyText").remove();
-        mdui.snackbar("已複製到剪貼簿");
+        mdui.snackbar("已复制到剪贴板");
       }
 
       document.querySelector("#admin-menu").innerHTML += '<li class="mdui-menu-item"><a class="mdui-ripple" onclick="copyURL()"><i class="mdui-menu-item-icon mdui-icon material-icons">link</i><!--constStr@CopyUrl--></a></li>';
@@ -570,7 +570,7 @@
       <img class="mdui-img-fluid mdui-center" src="<!--FileDownUrl-->" />
       <!--IsimgFileEnd-->
       <!--IsmusicFileStart-->
-      <div id="aplayer" class="mdui-text-center">音樂載入中...</div>
+      <div id="aplayer" class="mdui-text-center">音乐加载中...</div>
       <br />
       <div class="mdui-row" id="clpp">
         <a id="openiina" href="" type="button" class="clp mdui-btn mdui-ripple">IINA</a>
@@ -612,7 +612,7 @@
             if(ap.audio.duration > 0){
               if(localStorage.getItem(path + "/" + "<!--FileDownUrl-->") != null && localStorage.getItem(path + "/" + "<!--FileDownUrl-->") != 'null'){
                 ap.seek(localStorage.getItem(path + "/" + "<!--FileDownUrl-->") - 5);
-                mdui.snackbar('已恢復至上次播放位置');
+                mdui.snackbar('已恢复至上次播放位置');
                 isRecover = true;
               }else{
                 isRecover = true;
@@ -716,7 +716,7 @@
             if(dp.video.duration > 0 && dp.video.duration != NaN){
               if(localStorage.getItem(path + "/" + "<!--FileDownUrl-->") != null && localStorage.getItem(path + "/" + "<!--FileDownUrl-->") != 'null'){
                 dp.seek(localStorage.getItem(path + "/" + "<!--FileDownUrl-->") - 5);
-                mdui.snackbar('已恢復至上次播放位置');
+                mdui.snackbar('已恢复至上次播放位置');
                 isRecover = true;
               }else{
                 isRecover = true;
@@ -755,7 +755,7 @@
       </script>
       <!--IsofficeFileEnd-->
       <!--IspdfFileStart-->
-      <div id="pdf-d" style="text-align:center;margin:0 auto;width: calc(100%);">Loading PDF</div>
+      <div id="pdf-d" style="text-align:center;margin:0 auto;width: calc(100%);">PDF 加载中...</div>
       <script>
         function renderpage(pdf, i) {
           pdf.getPage(i).then(function (page) {
@@ -832,15 +832,15 @@
 <script src="//originfastly.jsdelivr.net/jquery"></script>
 <script src="//originfastly.jsdelivr.net/@highlightjs/cdn-assets/highlight.min.js"></script>
 
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/extra.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/extra.js"></script>
 
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@qm97ssij9cnii7x8fnbkpq4hcgq35dyr.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@59467336fgwnpx8qbfvtmpyeefv35e5i.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@a7r8jgn2qe3eyfrkahwdnqcjf7uba95k.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@keaxctnyw29nuzpsh66g7ki4h5wzy8zn.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@pe2nahunr9aihucdgc2ssjbgnaccr5rz.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/app@tsjmiafbhksy5pyb5tchy765wshmwwnd.js"></script>
-<script src="//originfastly.jsdelivr.net/renexmoe-tw527e-edition@1.2.4/js/webpack-runtime@cx4vgpbaggjuhg8rh6m3yarhkkxy4dm3.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@qm97ssij9cnii7x8fnbkpq4hcgq35dyr.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@59467336fgwnpx8qbfvtmpyeefv35e5i.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@a7r8jgn2qe3eyfrkahwdnqcjf7uba95k.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@keaxctnyw29nuzpsh66g7ki4h5wzy8zn.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@pe2nahunr9aihucdgc2ssjbgnaccr5rz.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/app@tsjmiafbhksy5pyb5tchy765wshmwwnd.js"></script>
+<script src="//cdn.jsdelivr.net/gh/GuangSeven/renexmoe-ii@main/js/webpack-runtime@cx4vgpbaggjuhg8rh6m3yarhkkxy4dm3.js"></script>
 
 <script>
   window.renexmoe.toggle_theme();
@@ -1145,7 +1145,7 @@
           localStorage.setItem(filesha1, JSON.stringify(html));
           await rnxAliyundriveBinup(file, html, i, upbigfilename, filesha1, chunksize);
         } else if (html.name != '') {
-          rnxSetRowStatus(i, '<font color="green">' + (html.rapid_upload ? html.name + ' 秒傳' : (html.exist ? html.name + ' <!--constStr@UploadComplete-->' : text)) + '</font>');
+          rnxSetRowStatus(i, '<font color="green">' + (html.rapid_upload ? html.name + ' 秒传' : (html.exist ? html.name + ' <!--constStr@UploadComplete-->' : text)) + '</font>');
           rnxUploadDone(i, true);
         } else {
           rnxUploadDone(i, false, text);
