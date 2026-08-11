@@ -478,7 +478,7 @@
         <li class="mdui-list-item file mdui-ripple" data-sort data-sort-name="<!--FileEncodeReplaceName-->"
           data-sort-date="<!--lastModifiedDateTime-->" data-sort-size="<!--size-->" data-readypreview="<!--FileExt-->">
           <a class="<!--FileExtType-->" data-name="<!--FileEncodeReplaceName-->"
-            href="<!--FileEncodeReplaceUrl-->?preview" aria-label="File">
+            href="<!--FileEncodeReplaceUrl-->?preview" aria-label="文件">
             <div class="mdui-row mdui-col-sm-12">
               <div class="mdui-col-xs-12 mdui-col-sm-7 mdui-text-truncate">
 
@@ -499,7 +499,7 @@
             </div>
           </a>
           <div class="forcedownload mdui-text-right">
-            <a title="<!--constStr@Download-->" aria-label="Download" href="<!--FileEncodeReplaceUrl-->"
+            <a title="<!--constStr@Download-->" aria-label="下载" href="<!--FileEncodeReplaceUrl-->"
               target="_blank"><button class="mdui-btn mdui-ripple mdui-btn-icon">
                 <i class="mdui-icon material-icons">file_download</i>
               </button></a>
@@ -911,7 +911,7 @@
           rnxMakeRow(i);
           rnxUploading[i] = i;
           if (typeof window.rnxDriverUpload === 'function') window.rnxDriverUpload(i);
-          else rnxUploadDone(i, false, 'driver not supported');
+          else rnxUploadDone(i, false, '驱动不支持');
           i++;
         }
       } else clearInterval(timer);
@@ -971,7 +971,7 @@
     var upbigfilename = encodeURIComponent(file.webkitRelativePath || file.name);
     var filemd5 = '';
     /*--GuestStart--*/
-    rnxSetRowStatus(i, '<!--constStr@Calculate--> md5');
+    rnxSetRowStatus(i, '<!--constStr@Calculate--> MD5');
     filemd5 = await new Promise(function (resolve, reject) {
       var spark = new SparkMD5.ArrayBuffer();
       var reader = new FileReader();
@@ -984,7 +984,7 @@
       reader.onload = function () {
         spark.append(this.result);
         asize += chunksize;
-        rnxSetRowStatus(i, 'md5: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
+        rnxSetRowStatus(i, '计算MD5: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
         if (asize < file.size) readblob(asize);
         else resolve(spark.end());
       };
@@ -1046,7 +1046,7 @@
         });
         if (pr.status >= 500) {
           retry++;
-          if (retry > 30) { rnxUploadDone(i, false, 'HTTP ' + pr.status); return; }
+          if (retry > 30) { rnxUploadDone(i, false, '上传失败 HTTP ' + pr.status); return; }
           continue;
         }
         retry = 0;
@@ -1094,7 +1094,7 @@
     var upbigfilename = encodeURIComponent(file.webkitRelativePath || file.name);
     var chunksize = 10 * 1024 * 1024;
     var filesha1 = '';
-    rnxSetRowStatus(i, '<!--constStr@Calculate--> sha1');
+    rnxSetRowStatus(i, '<!--constStr@Calculate--> SHA1');
     filesha1 = await new Promise(function (resolve, reject) {
       var spark = sha1.create();
       var reader = new FileReader();
@@ -1106,7 +1106,7 @@
       reader.onload = function () {
         spark.update(this.result);
         asize += chunksize;
-        rnxSetRowStatus(i, 'sha1: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
+        rnxSetRowStatus(i, '计算SHA1: ' + (Math.min(asize, file.size) * 100 / file.size).toFixed(2) + '%');
         if (asize < file.size) readblob(asize);
         else resolve(spark.hex());
       };
@@ -1177,9 +1177,9 @@
             rd.onerror = reject;
             rd.readAsDataURL(file.slice(off, off + 8));
           } catch (e) { reject(String(e)); }
-        } else reject(xhr.status + ' calc proof');
+        } else reject(xhr.status + ' 计算验证码失败');
       };
-      xhr.onerror = function () { reject('network error'); };
+      xhr.onerror = function () { reject('网络错误'); };
       xhr.send('CalcProof=1');
     });
   }
@@ -1203,7 +1203,7 @@
         });
         if (pr.status >= 500) {
           retry++;
-          if (retry > 30) { rnxUploadDone(i, false, 'HTTP ' + pr.status); return; }
+          if (retry > 30) { rnxUploadDone(i, false, '上传失败 HTTP ' + pr.status); return; }
           continue;
         }
         retry = 0;
@@ -1225,11 +1225,11 @@
             chunknum++;
             start = end + 1;
           } else {
-            rnxUploadDone(i, false, 'HTTP ' + pr.status);
+            rnxUploadDone(i, false, '上传失败 HTTP ' + pr.status);
             return;
           }
         } else {
-          rnxUploadDone(i, false, 'HTTP ' + pr.status + ' ' + (await pr.text()));
+          rnxUploadDone(i, false, '上传失败 HTTP ' + pr.status + ' ' + (await pr.text()));
           return;
         }
       }
