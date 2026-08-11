@@ -1,14 +1,14 @@
 {
-  "name": "renexmoe-tw527e-edition",
-  "version": "1.2.4",
-  "description": "高顏值 OneManager 主題，作用於 OneManager-php，提供多種CDN",
+  "name": "renexmoe-ii",
+  "version": "1.2.5",
+  "description": "高颜值 OneManager 主题，作用于 OneManager-php，提供多种CDN",
   "main": "renexmoe-tw527e-edition.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TW527E/renexmoe-tw527e-edition.git"
+    "url": "git+https://github.com/GuangSeven/renexmoe-ii.git"
   },
   "keywords": [
     "theme",
@@ -18,20 +18,19 @@
     "statically",
     "onemanager",
     "jsdelivr-cdn",
-    "tw527e",
+    "guangseven",
     "renexmoe",
-    "renexmoe-tw527e-edition",
-    "tw527e-edition",
+    "renexmoe-ii",
     "onemanager-php",
     "multi-cdn",
     "jsdelivr-fastly",
     "jsdelivr-gcore",
     "jsdelivr-originfastly"
   ],
-  "author": "TW527E",
+  "author": "GuangSeven",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/TW527E/renexmoe-tw527e-edition/issues"
+    "url": "https://github.com/GuangSeven/renexmoe-ii/issues"
   },
-  "homepage": "https://github.com/TW527E/renexmoe-tw527e-edition#readme"
+  "homepage": "https://github.com/GuangSeven/renexmoe-ii#readme"
 }
