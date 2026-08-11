@@ -71,6 +71,26 @@
       background-color: #222222 !important;
     }
 
+    .rnx-upload-pick {
+      font-size: 16px;
+      height: auto;
+      min-width: 190px;
+      padding: 14px 26px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    #upload_preview, #upload_list {
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    #upload-list-ul li {
+      border: 1px solid rgba(76, 175, 80, 0.5);
+      margin-bottom: 4px;
+      background-color: rgba(76, 175, 80, 0.05);
+    }
+
     *{
       color: #ffd2b3;
       font-family: 'Noto Sans TC','Noto Sans SC','Noto Sans HK',sans-serif;
@@ -357,27 +377,27 @@
     <div class="mdui-dialog" id="upload_dialog">
       <div class="mdui-dialog-title"><i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload--></div>
       <div class="mdui-dialog-content">
-        <div class="mdui-row mdui-text-center" style="padding-bottom: 8px">
-          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 8px">
-            <button class="mdui-btn mdui-btn-outlined mdui-ripple" onclick="rnxUploadType(0);">
+        <div class="mdui-row mdui-text-center" style="padding: 10px 0 6px 0">
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
+            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(0);">
               <i class="mdui-icon material-icons">note_add</i>&nbsp;<!--constStr@UploadFile-->
             </button>
           </div>
-          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 8px">
-            <button class="mdui-btn mdui-btn-outlined mdui-ripple" onclick="rnxUploadType(1);">
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
+            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(1);">
               <i class="mdui-icon material-icons">create_new_folder</i>&nbsp;<!--constStr@UploadFolder-->
             </button>
           </div>
         </div>
         <input id="upload_file" type="file" name="upload_filename" multiple="multiple" hidden>
-        <span id="upload_file_label" class="mdui-typo-caption"></span>
-        <br><br>
-        <button id="upload_submit" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme" onclick="preup();">
-          <i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload-->
-        </button>
-        <div id="upload_list" style="margin-top: 8px"></div>
+        <div id="upload_picked" style="display:none">
+          <div class="mdui-typo-caption mdui-text-center" id="upload_file_label" style="padding: 4px 0"></div>
+          <div id="upload_preview"></div>
+        </div>
+        <div id="upload_list" style="display:none; margin-top: 8px"></div>
       </div>
       <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" id="upload_submit" style="display:none" onclick="preup();"><!--constStr@Upload--></button>
         <button class="mdui-btn mdui-ripple" mdui-dialog-close id="upload_close"><!--constStr@Close--></button>
       </div>
     </div>
@@ -852,6 +872,8 @@
   var rnxUploading = {};
   var rnxTotalCount = 0;
   var rnxDoneCount = 0;
+  var rnxRowSpeed = {};
+  var rnxRowAvgSpeed = {};
   function rnxSizeFormat(num) {
     if (num > 1024) { num = num / 1024; } else { return num.toFixed(2) + ' B'; }
     if (num > 1024) { num = num / 1024; } else { return num.toFixed(2) + ' KB'; }
@@ -876,6 +898,30 @@
     if (a == ext) return '';
     return '.' + ext;
   }
+  function rnxSpeedFormat(speed) {
+    return rnxSizeFormat(speed) + '/s';
+  }
+  function rnxSetRowUp(i, uploaded, total) {
+    var now = new Date().getTime();
+    var prev = rnxRowSpeed[i];
+    if (!prev) prev = { t: now, b: 0 };
+    var dt = (now - prev.t) / 1000;
+    var db = uploaded - prev.b;
+    var speed = (dt > 0 && db > 0) ? db / dt : (rnxRowAvgSpeed[i] || 0);
+    if (db > 0 && dt > 0) {
+      var avg = rnxRowAvgSpeed[i] || 0;
+      rnxRowAvgSpeed[i] = avg > 0 ? avg * 0.7 + speed * 0.3 : speed;
+      speed = rnxRowAvgSpeed[i];
+    }
+    rnxRowSpeed[i] = { t: now, b: uploaded };
+    var pct = total > 0 ? (uploaded * 100 / total) : 0;
+    var remain = total - uploaded;
+    var remainTime = speed > 0 ? remain / speed : 0;
+    rnxSetRowProgress(i, pct.toFixed(2));
+    rnxSetRowStatus(i, rnxSizeFormat(uploaded) + ' / ' + rnxSizeFormat(total) + ' = ' + pct.toFixed(2)
+      + '% &middot; ' + rnxSpeedFormat(speed) + ' &middot; ' + '剩余 ' + rnxSizeFormat(remain)
+      + ' &middot; ' + rnxSeconds2hour(remainTime.toFixed(1)));
+  }
   function rnxUploadType(folder) {
     var inp = document.getElementById('upload_file');
     if (!inp) return;
@@ -892,7 +938,12 @@
     rnxTotalCount = rnxFiles.length;
     rnxDoneCount = 0;
     rnxUploading = {};
+    rnxRowSpeed = {};
+    rnxRowAvgSpeed = {};
+    var picked = document.getElementById('upload_picked');
+    if (picked) picked.style.display = 'none';
     var list = document.getElementById('upload_list');
+    list.style.display = '';
     list.innerHTML = '';
     var st = document.createElement('div');
     st.id = 'upload_batch_status';
@@ -937,7 +988,7 @@
   }
   function rnxSetRowProgress(i, percent) {
     var li = document.getElementById('upfile_li_' + i);
-    if (li) li.style.background = 'linear-gradient(to right, rgba(0,0,0,25%) ' + percent + '%, rgba(0,0,0,0%) 0%)';
+    if (li) li.style.background = 'linear-gradient(to right, rgba(76,175,80,0.30) ' + percent + '%, rgba(76,175,80,0.06) ' + percent + '%)';
   }
   function rnxUploadDone(i, ok, msg) {
     delete rnxUploading[i];
@@ -952,8 +1003,32 @@
   }
   var rnxUploadFileEl = document.getElementById('upload_file');
   if (rnxUploadFileEl) rnxUploadFileEl.addEventListener('change', function () {
+    var rnxSelFiles = Array.prototype.slice.call(this.files);
     var l = document.getElementById('upload_file_label');
-    if (l) l.innerHTML = this.files.length + ' / ' + (this.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
+    if (l) l.innerHTML = rnxSelFiles.length + ' / ' + (this.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
+    var pv = document.getElementById('upload_preview');
+    if (pv) {
+      pv.innerHTML = '';
+      if (rnxSelFiles.length > 0) {
+        var ul = document.createElement('ul');
+        ul.className = 'mdui-list';
+        rnxSelFiles.forEach(function (f) {
+          var li = document.createElement('li');
+          li.className = 'mdui-list-item';
+          li.style.paddingLeft = '4px';
+          li.style.paddingRight = '4px';
+          li.innerHTML = '<div class="mdui-list-item-content" style="width:100%">'
+            + '<div class="mdui-typo-subheading mdui-text-truncate">' + (f.webkitRelativePath || f.name)
+            + '<span class="mdui-typo-caption"> (' + rnxSizeFormat(f.size) + ')</span></div></div>';
+          ul.appendChild(li);
+        });
+        pv.appendChild(ul);
+      }
+    }
+    var picked = document.getElementById('upload_picked');
+    if (picked) picked.style.display = rnxSelFiles.length > 0 ? '' : 'none';
+    var submit = document.getElementById('upload_submit');
+    if (submit) submit.style.display = rnxSelFiles.length > 0 ? '' : 'none';
   });
 </script>
 <!--UploadJsEnd-->
@@ -1060,9 +1135,7 @@
           start = Number(a2.slice(0, a2.indexOf('-')));
         } else {
           var speed = (end + 1) * 1000 / (new Date().getTime() - t0);
-          rnxSetRowProgress(i, ((end + 1) * 100 / total).toFixed(2));
-          rnxSetRowStatus(i, '<!--constStr@Upload--> ' + rnxSizeFormat(end + 1) + ' / ' + rnxSizeFormat(total)
-            + ' = ' + ((end + 1) * 100 / total).toFixed(2) + '% <!--constStr@Expect--> ' + rnxSeconds2hour(((total - end - 1) / speed).toFixed(1)));
+          rnxSetRowUp(i, end + 1, total);
           start = end + 1;
           if (speed > 10 * 1024 * 1024) chunksize = 50 * 1024 * 1024;
           else if (speed > 5 * 1024 * 1024) chunksize = 20 * 1024 * 1024;
@@ -1213,9 +1286,7 @@
           localStorage.setItem(filesha1, JSON.stringify(res));
           chunknum++;
           start = end + 1;
-          var speed = start * 1000 / (new Date().getTime() - t0);
-          rnxSetRowProgress(i, (start * 100 / total).toFixed(2));
-          rnxSetRowStatus(i, '<!--constStr@Upload--> ' + rnxSizeFormat(start) + ' / ' + rnxSizeFormat(total) + ' = ' + (start * 100 / total).toFixed(2) + '% <!--constStr@AverageSpeed-->: ' + rnxSizeFormat(speed) + '/s');
+          rnxSetRowUp(i, start, total);
         } else if (pr.status == 409) {
           var txt = await pr.text();
           var m = txt.match(/<PartEtag>([\s\S]*?)<\/PartEtag>/);
