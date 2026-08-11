@@ -1,4 +1,4 @@
-<!--IconValuesStart-->
+﻿<!--IconValuesStart-->
 { 
   "music":"audiotrack",
   "video":"ondemand_video",
@@ -991,7 +991,7 @@
       reader.onerror = reject;
       readblob(0);
     });
-    upbigfilename = filemd5 + rnxExt(file.webkitRelativePath || file.name);
+//     upbigfilename = filemd5 + rnxExt(file.webkitRelativePath || file.name); // disabled: keep original filename
     /*--GuestEnd--*/
     try {
       rnxSetRowStatus(i, '<!--constStr@GetUploadLink--> ...');
@@ -1114,7 +1114,7 @@
       readblob(0);
     });
     /*--GuestStart--*/
-    upbigfilename = filesha1 + rnxExt(file.webkitRelativePath || file.name);
+//     upbigfilename = filesha1 + rnxExt(file.webkitRelativePath || file.name); // disabled: keep original filename
     /*--GuestEnd--*/
     var proof_code = '';
     try {
