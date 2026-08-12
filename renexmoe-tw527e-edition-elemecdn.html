@@ -198,6 +198,23 @@
       color: rgba(255, 255, 255, 0.4);
     }
 
+    .rnx-ver {
+      padding: 14px 20px;
+      font-size: 12px;
+      line-height: 1.9;
+      color: rgba(255, 255, 255, 0.55);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      user-select: text;
+    }
+    .rnx-ver a {
+      color: rgba(255, 255, 255, 0.75);
+    }
+    .rnx-ver .rnx-ver-code {
+      color: rgba(255, 255, 255, 0.75);
+      font-family: Consolas, monospace;
+      margin-left: 4px;
+    }
+
     *{
       color: #ffd2b3;
       font-family: 'Noto Sans TC','Noto Sans SC','Noto Sans HK',sans-serif;
@@ -449,6 +466,12 @@
         }
       </script>
     </div>
+    <div class="rnx-ver">
+      Theme <a href="https://github.com/GuangSeven/renexmoe-ii" target="_blank">renexmoe-ii</a>
+      <span class="rnx-ver-code" id="rnx_theme_ver">a6065ed</span><br>
+      OneManager <a href="https://github.com/GuangSeven/onemanager-ii" target="_blank">onemanager-ii</a>
+      <span class="rnx-ver-code" id="rnx_om_ver"><!--Version--></span>
+    </div>
   </div>
   <div class="mdui-container" style="position: relative;">
     <ul class="mdui-menu" id="admin-menu">
@@ -664,6 +687,11 @@
             var inst = rnxRealInst(el);
             if (inst) inst.close();
             else rnxForceClose(el);
+          });
+          document.querySelectorAll('.mdui-dialog').forEach(function (el) {
+            if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
+              el.style.display = 'none';
+            }
           });
           document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
             o.classList.remove('mdui-overlay-show');
@@ -892,6 +920,20 @@
           document.addEventListener('pjax:success', function () {
             setTimeout(rnxCloseAllOpen, 50);
           });
+          setInterval(function () {
+            document.querySelectorAll('.mdui-dialog').forEach(function (el) {
+              if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
+                el.style.display = 'none';
+              }
+            });
+            if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
+            }
+          }, 1500);
+          var omVer = document.getElementById('rnx_om_ver');
+          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
         }
         (function () {
           var menu = document.getElementById('admin-menu');
