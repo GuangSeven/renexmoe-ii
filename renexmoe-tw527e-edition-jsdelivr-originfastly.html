@@ -663,6 +663,7 @@
         var rnxBrowse = { mode: '', path: '/', stack: [], target: [] };
         function rnxBrowsePathClean(p) {
           if (p == '' || p == '/') return '/';
+          while (p.indexOf('//') > -1) p = p.replace('//', '/');
           if (p.slice(-1) == '/') p = p.slice(0, -1);
           return p;
         }
@@ -674,7 +675,7 @@
           if (pathEl) pathEl.textContent = rnxBrowse.path;
           if (upBtn) upBtn.disabled = rnxBrowse.path == '/';
           if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px">加载中...</div>';
-          var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path + '/') + '?json=1';
+          var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path.split('/').map(encodeURIComponent).join('/') + '/') + '?json=1';
           fetch(url, { headers: { 'x-requested-with': 'XMLHttpRequest' } }).then(function (r) {
             return r.json();
           }).then(function (j) {
@@ -700,7 +701,7 @@
               row.querySelector('.rnx-browser-name').textContent = name;
               row.addEventListener('click', function () {
                 rnxBrowse.stack.push(rnxBrowse.path);
-                rnxBrowse.path = rnxBrowsePathClean(rnxBrowse.path) + '/' + name;
+                rnxBrowse.path = rnxBrowsePathClean(rnxBrowse.path + '/' + name);
                 rnxBrowseLoad();
               });
               listEl.appendChild(row);
