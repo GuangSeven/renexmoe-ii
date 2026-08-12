@@ -1,4 +1,4 @@
-<!--IconValuesStart-->
+﻿<!--IconValuesStart-->
 { 
   "music":"audiotrack",
   "video":"ondemand_video",
@@ -375,156 +375,7 @@
 
 <body>
   <div class="blur"></div>
-</body>
-
-<body class="mdui-appbar-with-toolbar mdui-theme-layout-auto mdui-drawer-body-left mdui-theme-accent-pink">
-  <header class="mdui-appbar mdui-appbar-fixed">
-    <div class="mdui-toolbar">
-      <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white"
-        onclick='mdui.$(".mdui-appbar-with-toolbar").toggleClass("mdui-drawer-body-left");' id="toggle-drawer"><i
-          class="mdui-icon material-icons">menu</i></span>
-      <a class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" onclick="window.history.back()">
-        <i class="mdui-icon material-icons">arrow_back</i>
-      </a>
-      <a href="<!--base_path-->" class="mdui-typo-headline">
-        <!--Sitename-->
-      </a>
-      <!--DiskPathArrayStart-->
-      <i class="mdui-icon material-icons mdui-hidden-xs" style="margin: 0">chevron_right</i><a
-        href="<!--PathArrayLink-->" class="mdui-typo-subheading mdui-hidden-xs">
-        <!--PathArrayName-->
-      </a>
-      <!--DiskPathArrayEnd-->
-      <div class="mdui-toolbar-spacer"></div>
-    </div>
-  </header>
-  <div class="mdui-drawer" id="main-drawer">
-    <div class="mdui-list" mdui-collapse="{accordion: true}">
-      <!--LoginStart-->
-      <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#login_input'}" >
-        <a class="mdui-list-item-icon mdui-icon material-icons">account_circle</a>
-        <a class="mdui-list-item-content" mdui-dialog="{target: '#login_input'}"><!--constStr@Login--></a>
-      </li>
-      <!--LoginEnd-->
-      <li class="mdui-list-item mdui-ripple" onclick="renexmoe.toggle_theme();">
-        <a class="mdui-list-item-icon mdui-icon material-icons">brightness_4</a><a
-          class="mdui-list-item-content">深色背景模式</a>
-      </li>
-      <li class="mdui-list-item mdui-ripple">
-        <a href="<!--base_path-->" class="mdui-list-item-icon mdui-icon material-icons">home</a><a
-          href="<!--base_path-->" class="mdui-list-item-content" id="home">
-          <!--constStr@Home-->
-        </a>
-      </li>
-      <!--UploadJsStart-->
-      <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#upload_dialog'}">
-        <a class="mdui-list-item-icon mdui-icon material-icons">cloud_upload</a><a
-          class="mdui-list-item-content"><!--constStr@Upload--></a>
-      </li>
-      <!--UploadJsEnd-->
-      <!--MultiDiskAreaStart-->
-      <div class="mdui-divider"></div>
-      <!--MultiDisksStart-->
-      <li class="mdui-list-item mdui-ripple">
-        <a href="<!--MultiDisksUrl-->" class="mdui-list-item-icon mdui-icon material-icons">cloud</a>
-        <a href="<!--MultiDisksUrl-->" class="mdui-list-item-content mdui-text-truncate disk_name">
-          <!--MultiDisksName-->
-        </a>
-      </li>
-      <!--MultiDisksEnd-->
-      <div class="mdui-divider"></div>
-      <!--MultiDiskAreaEnd-->
-      <a target="_blank" href="https://github.com/GuangSeven" class="mdui-list-item mdui-ripple">
-        <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
-        <div class="mdui-list-item-content">GitHub</div>
-      </a>
-      <li class="mdui-list-item mdui-ripple" id="about_theme">
-        <i class="mdui-list-item-icon mdui-icon material-icons">info</i>
-        <div class="mdui-list-item-content">关于主题</div>
-      </li>
-      <div class="mdui-divider"></div>
-      <li class="mdui-list-item mdui-ripple" id="select_language" style="overflow: visible;">
-        <i class="mdui-list-item-icon mdui-icon material-icons">language</i>
-        <div class="mdui-list-item-content" style="padding-top: 10px;padding-bottom: 10px;">
-          <select class="mdui-select" name="language" mdui-select onchange="changelanguage(this.options[this.options.selectedIndex].value)">
-          <!--SelectLanguageStart-->
-            <option value="<!--SelectLanguageKey-->" <!--SelectLanguageSelected-->><!--SelectLanguageValue--></option>
-          <!--SelectLanguageEnd-->
-        </select>
-      </div>
-      </li>
-      <script>
-        function changelanguage(str)
-        {
-          if (str=='Language') str = '';
-          var expd = new Date();
-          expd.setTime(expd.getTime()+(2*60*60*1000));
-          var expires = "expires="+expd.toGMTString();
-          document.cookie='language='+str+'; path=/; '+expires;
-          location.href = location.href;
-        }
-      </script>
-    </div>
-  </div>
-  <div class="mdui-container" style="position: relative;">
-    <ul class="mdui-menu" id="admin-menu">
-      <li class="mdui-menu-item">
-        <a href="javascript:;" class="mdui-ripple back">
-          <i class="mdui-menu-item-icon mdui-icon material-icons">arrow_back</i>
-          返回上一页
-        </a>
-      </li>
-    </ul>
-    <i id="mouseplace" style="position: fixed"></i>
-
-    <!--LoginStart-->
-    <div class="mdui-dialog" id="login_input">
-      <div class="mdui-dialog-title"><!--constStr@Login--></div>
-      <form action="<!--IsPreview?-->login=admin" method="post" onsubmit="return sha1loginpass(this);">
-        <div class="mdui-dialog-content">
-          <div class="mdui-textfield mdui-textfield-floating-label">
-            <i class="mdui-icon material-icons">lock</i><label class="mdui-textfield-label"><!--constStr@InputPassword--></label>
-            <input class="mdui-textfield-input" id="login_password" name="password1" type="password">
-            <input name="timestamp" type="hidden" value="">
-          </div>
-        </div>
-        <div class="mdui-dialog-actions">
-          <button type="button" class="mdui-btn mdui-ripple" mdui-dialog-close id="login_close"><!--constStr@Close--></button>
-          <button id="login_btn_bak" class="mdui-btn mdui-ripple" type="submit"><!--constStr@Login--></button>
-        </div>
-      </form>
-    </div>
-    <!--LoginEnd-->
-    <!--UploadJsStart-->
-    <div class="mdui-dialog" id="upload_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload--></div>
-      <div class="mdui-dialog-content">
-        <div class="mdui-row mdui-text-center" style="padding: 10px 0 6px 0">
-          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
-            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(0);">
-              <i class="mdui-icon material-icons">note_add</i>&nbsp;<!--constStr@UploadFile-->
-            </button>
-          </div>
-          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
-            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(1);">
-              <i class="mdui-icon material-icons">create_new_folder</i>&nbsp;<!--constStr@UploadFolder-->
-            </button>
-          </div>
-        </div>
-        <input id="upload_file" type="file" name="upload_filename" multiple="multiple" hidden>
-        <div id="upload_picked" style="display:none">
-          <div class="mdui-typo-caption mdui-text-center" id="upload_file_label" style="padding: 4px 0"></div>
-          <div id="upload_preview"></div>
-        </div>
-        <div id="upload_list" style="display:none; margin-top: 8px"></div>
-      </div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" id="upload_submit" style="display:none" onclick="preup();"><!--constStr@Upload--></button>
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close id="upload_close"><!--constStr@Close--></button>
-      </div>
-    </div>
-    <!--UploadJsEnd-->
-    <!--GuestUpStart-->
+<!--GuestUpStart-->
     <div class="mdui-dialog" id="rnx_del_dialog">
       <div class="mdui-dialog-title"><i class="mdui-icon material-icons">delete</i>&nbsp;删除</div>
       <div class="mdui-dialog-content" id="rnx_del_content"></div>
@@ -702,8 +553,9 @@
           }, 400);
         }
         function rnxBind(id, fn) {
-          var el = document.getElementById(id);
-          if (el) el.addEventListener('click', fn);
+          document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('#' + id)) fn.call(e.target, e);
+          });
         }
         function rnxCopyText(t) {
           function fallback() {
@@ -934,6 +786,8 @@
               if (thM) thVer.textContent = thM[1];
             }
           }
+          var omVer = document.getElementById('rnx_om_ver');
+          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
         }
         (function () {
           var menu = document.getElementById('admin-menu');
@@ -1019,14 +873,163 @@
           if (items.length < 1) { mdui.alert('仅文件可获取链接'); return; }
           rnxCopyText(items.map(function (it) { return new URL(it.url, location.href).href; }).join('\n'));
         });
-        var rnxList = document.getElementById('file-list');
-        if (rnxList) rnxList.addEventListener('change', function (e) {
-          if (e.target && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
+        document.addEventListener('change', function (e) {
+          if (e.target && e.target.classList && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
         });
         rnxAdmBarUpdate();
       })();
     </script>
     <!--GuestUpEnd-->
+</body>
+
+<body class="mdui-appbar-with-toolbar mdui-theme-layout-auto mdui-drawer-body-left mdui-theme-accent-pink">
+  <header class="mdui-appbar mdui-appbar-fixed">
+    <div class="mdui-toolbar">
+      <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white"
+        onclick='mdui.$(".mdui-appbar-with-toolbar").toggleClass("mdui-drawer-body-left");' id="toggle-drawer"><i
+          class="mdui-icon material-icons">menu</i></span>
+      <a class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" onclick="window.history.back()">
+        <i class="mdui-icon material-icons">arrow_back</i>
+      </a>
+      <a href="<!--base_path-->" class="mdui-typo-headline">
+        <!--Sitename-->
+      </a>
+      <!--DiskPathArrayStart-->
+      <i class="mdui-icon material-icons mdui-hidden-xs" style="margin: 0">chevron_right</i><a
+        href="<!--PathArrayLink-->" class="mdui-typo-subheading mdui-hidden-xs">
+        <!--PathArrayName-->
+      </a>
+      <!--DiskPathArrayEnd-->
+      <div class="mdui-toolbar-spacer"></div>
+    </div>
+  </header>
+  <div class="mdui-drawer" id="main-drawer">
+    <div class="mdui-list" mdui-collapse="{accordion: true}">
+      <!--LoginStart-->
+      <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#login_input'}" >
+        <a class="mdui-list-item-icon mdui-icon material-icons">account_circle</a>
+        <a class="mdui-list-item-content" mdui-dialog="{target: '#login_input'}"><!--constStr@Login--></a>
+      </li>
+      <!--LoginEnd-->
+      <li class="mdui-list-item mdui-ripple" onclick="renexmoe.toggle_theme();">
+        <a class="mdui-list-item-icon mdui-icon material-icons">brightness_4</a><a
+          class="mdui-list-item-content">深色背景模式</a>
+      </li>
+      <li class="mdui-list-item mdui-ripple">
+        <a href="<!--base_path-->" class="mdui-list-item-icon mdui-icon material-icons">home</a><a
+          href="<!--base_path-->" class="mdui-list-item-content" id="home">
+          <!--constStr@Home-->
+        </a>
+      </li>
+      <!--UploadJsStart-->
+      <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#upload_dialog'}">
+        <a class="mdui-list-item-icon mdui-icon material-icons">cloud_upload</a><a
+          class="mdui-list-item-content"><!--constStr@Upload--></a>
+      </li>
+      <!--UploadJsEnd-->
+      <!--MultiDiskAreaStart-->
+      <div class="mdui-divider"></div>
+      <!--MultiDisksStart-->
+      <li class="mdui-list-item mdui-ripple">
+        <a href="<!--MultiDisksUrl-->" class="mdui-list-item-icon mdui-icon material-icons">cloud</a>
+        <a href="<!--MultiDisksUrl-->" class="mdui-list-item-content mdui-text-truncate disk_name">
+          <!--MultiDisksName-->
+        </a>
+      </li>
+      <!--MultiDisksEnd-->
+      <div class="mdui-divider"></div>
+      <!--MultiDiskAreaEnd-->
+      <a target="_blank" href="https://github.com/GuangSeven" class="mdui-list-item mdui-ripple">
+        <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
+        <div class="mdui-list-item-content">GitHub</div>
+      </a>
+      <li class="mdui-list-item mdui-ripple" id="about_theme">
+        <i class="mdui-list-item-icon mdui-icon material-icons">info</i>
+        <div class="mdui-list-item-content">关于主题</div>
+      </li>
+      <div class="mdui-divider"></div>
+      <li class="mdui-list-item mdui-ripple" id="select_language" style="overflow: visible;">
+        <i class="mdui-list-item-icon mdui-icon material-icons">language</i>
+        <div class="mdui-list-item-content" style="padding-top: 10px;padding-bottom: 10px;">
+          <select class="mdui-select" name="language" mdui-select onchange="changelanguage(this.options[this.options.selectedIndex].value)">
+          <!--SelectLanguageStart-->
+            <option value="<!--SelectLanguageKey-->" <!--SelectLanguageSelected-->><!--SelectLanguageValue--></option>
+          <!--SelectLanguageEnd-->
+        </select>
+      </div>
+      </li>
+      <script>
+        function changelanguage(str)
+        {
+          if (str=='Language') str = '';
+          var expd = new Date();
+          expd.setTime(expd.getTime()+(2*60*60*1000));
+          var expires = "expires="+expd.toGMTString();
+          document.cookie='language='+str+'; path=/; '+expires;
+          location.href = location.href;
+        }
+      </script>
+    </div>
+  </div>
+  <div class="mdui-container" style="position: relative;">
+    <ul class="mdui-menu" id="admin-menu">
+      <li class="mdui-menu-item">
+        <a href="javascript:;" class="mdui-ripple back">
+          <i class="mdui-menu-item-icon mdui-icon material-icons">arrow_back</i>
+          返回上一页
+        </a>
+      </li>
+    </ul>
+    <i id="mouseplace" style="position: fixed"></i>
+
+    <!--LoginStart-->
+    <div class="mdui-dialog" id="login_input">
+      <div class="mdui-dialog-title"><!--constStr@Login--></div>
+      <form action="<!--IsPreview?-->login=admin" method="post" onsubmit="return sha1loginpass(this);">
+        <div class="mdui-dialog-content">
+          <div class="mdui-textfield mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">lock</i><label class="mdui-textfield-label"><!--constStr@InputPassword--></label>
+            <input class="mdui-textfield-input" id="login_password" name="password1" type="password">
+            <input name="timestamp" type="hidden" value="">
+          </div>
+        </div>
+        <div class="mdui-dialog-actions">
+          <button type="button" class="mdui-btn mdui-ripple" mdui-dialog-close id="login_close"><!--constStr@Close--></button>
+          <button id="login_btn_bak" class="mdui-btn mdui-ripple" type="submit"><!--constStr@Login--></button>
+        </div>
+      </form>
+    </div>
+    <!--LoginEnd-->
+    <!--UploadJsStart-->
+    <div class="mdui-dialog" id="upload_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">cloud_upload</i>&nbsp;<!--constStr@Upload--></div>
+      <div class="mdui-dialog-content">
+        <div class="mdui-row mdui-text-center" style="padding: 10px 0 6px 0">
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
+            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(0);">
+              <i class="mdui-icon material-icons">note_add</i>&nbsp;<!--constStr@UploadFile-->
+            </button>
+          </div>
+          <div class="mdui-col-xs-12 mdui-col-sm-6" style="padding-bottom: 10px">
+            <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme rnx-upload-pick" onclick="rnxUploadType(1);">
+              <i class="mdui-icon material-icons">create_new_folder</i>&nbsp;<!--constStr@UploadFolder-->
+            </button>
+          </div>
+        </div>
+        <input id="upload_file" type="file" name="upload_filename" multiple="multiple" hidden>
+        <div id="upload_picked" style="display:none">
+          <div class="mdui-typo-caption mdui-text-center" id="upload_file_label" style="padding: 4px 0"></div>
+          <div id="upload_preview"></div>
+        </div>
+        <div id="upload_list" style="display:none; margin-top: 8px"></div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" id="upload_submit" style="display:none" onclick="preup();"><!--constStr@Upload--></button>
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close id="upload_close"><!--constStr@Close--></button>
+      </div>
+    </div>
+    <!--UploadJsEnd-->
+    
     <!--EncryptedStart-->
     <div class="mdui-center" style="margin: 20px auto;max-width: 600px;">
       <br />
@@ -1497,7 +1500,7 @@
     <!--IsFileEnd-->
   </div>
   <div class="mdui-text-center mdui-typo" id="footer"  style="position: relative;"></div>
-  <div class="rnx-ver" id="rnx_ver_watermark">renexmoe-ii <span id="rnx_theme_ver"><!--ThemeUrl--></span></div>
+  <div class="rnx-ver" id="rnx_ver_watermark">renexmoe-ii <span id="rnx_theme_ver"><!--ThemeUrl--></span><br>onemanager-ii <span id="rnx_om_ver"><!--OmHash--></span></div>
 </body>
 
 
