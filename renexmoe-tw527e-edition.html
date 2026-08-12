@@ -584,12 +584,23 @@
           }
           next();
         }
+        var rnxDlgCache = {};
         function rnxDialog(id) {
           var el = document.getElementById(id);
-          return mdui.Dialog.getInstance(el) || new mdui.Dialog(el);
+          if (!el) return null;
+          var inst = rnxDlgCache[id];
+          if (!inst || inst.$element[0] !== el) {
+            inst = new mdui.Dialog(el);
+            rnxDlgCache[id] = inst;
+          }
+          return inst;
         }
-        function rnxOpenDialog(id) { rnxDialog(id).open(); }
-        function rnxCloseDialog(id) { rnxDialog(id).close(); }
+        function rnxOpenDialog(id) { var d = rnxDialog(id); if (d) d.open(); }
+        function rnxCloseDialog(id) { var d = rnxDialog(id); if (d) d.close(); }
+        function rnxBind(id, fn) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener('click', fn);
+        }
         function rnxCopyText(t) {
           function fallback() {
             var ta = document.createElement('textarea');
@@ -665,19 +676,19 @@
           var m = document.getElementById('rnx_ctxmenu');
           if (m) m.style.display = 'none';
         });
-        document.getElementById('rnx_del_ok').addEventListener('click', function () {
+        rnxBind('rnx_del_ok', function () {
           rnxCloseDialog('rnx_del_dialog');
           rnxAdmSeq(rnxDelItems, function (it) {
             return 'delete_name=' + encodeURIComponent(it.name) + '&delete_fileid=' + encodeURIComponent(it.id || '');
           }, '删除', function () { location.reload(); });
         });
-        document.getElementById('rnx_cpy_ok').addEventListener('click', function () {
+        rnxBind('rnx_cpy_ok', function () {
           rnxCloseDialog('rnx_cpy_dialog');
           rnxAdmSeq(rnxCpyItems, function (it) {
             return 'copy_name=' + encodeURIComponent(it.name) + '&copy_fileid=' + encodeURIComponent(it.id || '');
           }, '复制', function () { location.reload(); });
         });
-        document.getElementById('rnx_ren_ok').addEventListener('click', function () {
+        rnxBind('rnx_ren_ok', function () {
           var nv = document.getElementById('rnx_ren_input').value.trim();
           if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
           rnxCloseDialog('rnx_ren_dialog');
@@ -688,7 +699,7 @@
             location.reload();
           });
         });
-        document.getElementById('rnx_mov_ok').addEventListener('click', function () {
+        rnxBind('rnx_mov_ok', function () {
           var p = document.getElementById('rnx_mov_path').value.trim();
           var sel = document.getElementById('rnx_mov_sel');
           var folder = p || (sel ? sel.value : '');
@@ -698,7 +709,7 @@
             return 'move_name=' + encodeURIComponent(it.name) + '&move_folder=' + encodeURIComponent(folder) + '&move_fileid=' + encodeURIComponent(it.id || '');
           }, '移动', function () { location.reload(); });
         });
-        document.getElementById('rnx_bar_download').addEventListener('click', function () {
+        rnxBind('rnx_bar_download', function () {
           var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
           if (items.length < 1) { mdui.alert('仅文件可下载'); return; }
           items.forEach(function (it, idx) {
@@ -712,19 +723,19 @@
             }, idx * 250);
           });
         });
-        document.getElementById('rnx_bar_delete').addEventListener('click', function () { rnxOpenDel(rnxAdmSel()); });
-        document.getElementById('rnx_bar_move').addEventListener('click', function () { rnxOpenMov(rnxAdmSel()); });
-        document.getElementById('rnx_bar_rename').addEventListener('click', function () {
+        rnxBind('rnx_bar_delete', function () { rnxOpenDel(rnxAdmSel()); });
+        rnxBind('rnx_bar_move', function () { rnxOpenMov(rnxAdmSel()); });
+        rnxBind('rnx_bar_rename', function () {
           var s = rnxAdmSel();
           if (s.length != 1) { mdui.alert('请只选择一个文件'); return; }
           rnxOpenRen(s[0]);
         });
-        document.getElementById('rnx_bar_link').addEventListener('click', function () {
+        rnxBind('rnx_bar_link', function () {
           var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
           if (items.length < 1) { mdui.alert('仅文件可获取链接'); return; }
           rnxCopyText(items.map(function (it) { return new URL(it.url, location.href).href; }).join('\n'));
         });
-        document.getElementById('rnx_bar_clear').addEventListener('click', function () {
+        rnxBind('rnx_bar_clear', function () {
           document.querySelectorAll('#file-list .rnx_ck:checked').forEach(function (el) { el.checked = false; });
           rnxAdmBarUpdate();
         });
@@ -1363,11 +1374,11 @@
       window.location.reload();
     }
   }
-  var rnxUploadFileEl = document.getElementById('upload_file');
-  if (rnxUploadFileEl) rnxUploadFileEl.addEventListener('change', function () {
-    var rnxSelFiles = Array.prototype.slice.call(this.files);
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.id !== 'upload_file') return;
+    var rnxSelFiles = Array.prototype.slice.call(e.target.files);
     var l = document.getElementById('upload_file_label');
-    if (l) l.innerHTML = rnxSelFiles.length + ' / ' + (this.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
+    if (l) l.innerHTML = rnxSelFiles.length + ' / ' + (e.target.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
     var pv = document.getElementById('upload_preview');
     if (pv) {
       pv.innerHTML = '';
