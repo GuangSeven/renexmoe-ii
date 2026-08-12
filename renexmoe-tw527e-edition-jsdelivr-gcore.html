@@ -634,7 +634,17 @@
           return inst;
         }
         function rnxOpenDialog(id) { var d = rnxDialog(id); if (d) d.open(); }
-        function rnxCloseDialog(id) { var d = rnxDialog(id); if (d) d.close(); }
+        function rnxCloseDialog(id) {
+          var d = rnxDialog(id);
+          if (d) d.close();
+          setTimeout(function () {
+            if (!document.querySelector('.mdui-dialog-open')) {
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
+            }
+          }, 400);
+        }
         function rnxBind(id, fn) {
           var el = document.getElementById(id);
           if (el) el.addEventListener('click', fn);
@@ -779,6 +789,26 @@
             else if (act == 'rename') rnxOpenRen(rnxCtxItem);
           });
           document.addEventListener('click', function (e) {
+            var t = e.target;
+            if (!t || !t.closest) return;
+            if (t.closest('.rnx_ck') || t.closest('.forcedownload') || t.closest('#file-list li > a')) return;
+            var li = t.closest('#file-list li');
+            if (!li) return;
+            var a = li.querySelector(':scope > a');
+            if (a && a.getAttribute('href')) {
+              e.preventDefault();
+              a.click();
+            }
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' || e.isComposing) return;
+            var t = e.target;
+            if (t && (t.id === 'rnx_mov_path' || t.id === 'rnx_cpy_path')) {
+              e.preventDefault();
+              rnxBrowseGoTo();
+            }
+          });
+          document.addEventListener('click', function (e) {
             if (!e.target || e.target.id !== 'rnx_ck_all') return;
             var all = document.querySelectorAll('#file-list .rnx_ck');
             var checked = document.querySelectorAll('#file-list .rnx_ck:checked').length;
@@ -838,17 +868,6 @@
         });
         rnxBind('rnx_cpy_ok', rnxBrowseConfirm);
         rnxBind('rnx_cpy_up', rnxBrowseUp);
-        (function () {
-          var p1 = document.getElementById('rnx_mov_path');
-          var p2 = document.getElementById('rnx_cpy_path');
-          function onEnter(e) {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            rnxBrowseGoTo();
-          }
-          if (p1) p1.addEventListener('keydown', onEnter);
-          if (p2) p2.addEventListener('keydown', onEnter);
-        })();
         rnxBind('rnx_ren_ok', function () {
           var nv = document.getElementById('rnx_ren_input').value.trim();
           if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
