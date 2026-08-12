@@ -768,14 +768,15 @@
               });
             }
           }, 1500);
+        }
+        function rnxWatermark() {
           var thVer = document.getElementById('rnx_theme_ver');
           if (thVer) {
             var thText = thVer.textContent;
             if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
-            else {
+            else if (thText.indexOf('@') > -1) {
               var thM = thText.match(/@([^\/]+)\//);
-              if (thM) thVer.textContent = thM[1];
-              else thVer.textContent = '—';
+              thVer.textContent = thM ? thM[1] : '—';
             }
           }
           var omVer = document.getElementById('rnx_om_ver');
@@ -802,6 +803,7 @@
         function rnxInitDom() {
           rnxInjectMenu();
           rnxAdmBarUpdate();
+          rnxWatermark();
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', rnxInitDom);
