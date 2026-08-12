@@ -213,6 +213,7 @@
       color: rgba(255, 255, 255, 0.75);
       font-family: Consolas, monospace;
       margin-left: 4px;
+      word-break: break-all;
     }
 
     *{
@@ -468,7 +469,7 @@
     </div>
     <div class="rnx-ver">
       Theme <a href="https://github.com/GuangSeven/renexmoe-ii" target="_blank">renexmoe-ii</a>
-      <span class="rnx-ver-code" id="rnx_theme_ver">aa9c2cc</span><br>
+      <span class="rnx-ver-code" id="rnx_theme_ver"><!--ThemeUrl--></span><br>
       OneManager <a href="https://github.com/GuangSeven/onemanager-ii" target="_blank">onemanager-ii</a>
       <span class="rnx-ver-code" id="rnx_om_ver"><!--Version--></span>
     </div>
@@ -934,6 +935,8 @@
           }, 1500);
           var omVer = document.getElementById('rnx_om_ver');
           if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
+          var thVer = document.getElementById('rnx_theme_ver');
+          if (thVer && thVer.textContent.indexOf('<!--') > -1) thVer.textContent = '—';
         }
         (function () {
           var menu = document.getElementById('admin-menu');
