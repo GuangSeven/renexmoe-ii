@@ -1506,6 +1506,18 @@
   </div>
   <div class="mdui-text-center mdui-typo" id="footer"  style="position: relative;"></div>
   <div class="rnx-ver" id="rnx_ver_watermark">renexmoe-ii <span id="rnx_theme_ver"><!--ThemeUrl--></span><br>onemanager-ii <span id="rnx_om_ver"><!--OmHash--></span></div>
+  <script>
+    (function () {
+      var t = document.getElementById('rnx_theme_ver');
+      if (t) {
+        var s = t.textContent;
+        if (s.indexOf('<!--') > -1) t.textContent = '—';
+        else if (s.indexOf('@') > -1) { var m = s.match(/@([^\/]+)\//); t.textContent = m ? m[1] : '—'; }
+      }
+      var o = document.getElementById('rnx_om_ver');
+      if (o && o.textContent.indexOf('<!--') > -1) o.textContent = '—';
+    })();
+  </script>
 </body>
 
 
