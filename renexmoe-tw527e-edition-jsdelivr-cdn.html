@@ -213,7 +213,6 @@
       color: rgba(255, 255, 255, 0.75);
       font-family: Consolas, monospace;
       margin-left: 4px;
-      word-break: break-all;
     }
 
     *{
@@ -933,10 +932,15 @@
               });
             }
           }, 1500);
-          var omVer = document.getElementById('rnx_om_ver');
-          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
           var thVer = document.getElementById('rnx_theme_ver');
-          if (thVer && thVer.textContent.indexOf('<!--') > -1) thVer.textContent = '—';
+          if (thVer) {
+            var thText = thVer.textContent;
+            if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
+            else {
+              var thM = thText.match(/@([0-9a-f]+)\//);
+              if (thM) thVer.textContent = thM[1];
+            }
+          }
         }
         (function () {
           var menu = document.getElementById('admin-menu');
@@ -1500,6 +1504,7 @@
     <!--IsFileEnd-->
   </div>
   <div class="mdui-text-center mdui-typo" id="footer"  style="position: relative;"></div>
+  <div class="rnx-ver" id="rnx_ver_watermark">renexmoe-ii <span id="rnx_theme_ver"><!--ThemeUrl--></span></div>
 </body>
 
 

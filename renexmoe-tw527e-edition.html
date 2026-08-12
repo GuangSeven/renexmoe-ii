@@ -199,21 +199,19 @@
     }
 
     .rnx-ver {
-      padding: 14px 20px;
-      font-size: 12px;
-      line-height: 1.9;
-      color: rgba(255, 255, 255, 0.55);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      user-select: text;
-    }
-    .rnx-ver a {
-      color: rgba(255, 255, 255, 0.75);
+      position: fixed;
+      left: 14px;
+      bottom: 12px;
+      z-index: 950;
+      font-size: 11px;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      user-select: none;
     }
     .rnx-ver .rnx-ver-code {
-      color: rgba(255, 255, 255, 0.75);
       font-family: Consolas, monospace;
       margin-left: 4px;
-      word-break: break-all;
     }
 
     *{
@@ -466,12 +464,6 @@
           location.href = location.href;
         }
       </script>
-    </div>
-    <div class="rnx-ver">
-      Theme <a href="https://github.com/GuangSeven/renexmoe-ii" target="_blank">renexmoe-ii</a>
-      <span class="rnx-ver-code" id="rnx_theme_ver"><!--ThemeUrl--></span><br>
-      OneManager <a href="https://github.com/GuangSeven/onemanager-ii" target="_blank">onemanager-ii</a>
-      <span class="rnx-ver-code" id="rnx_om_ver"><!--Version--></span>
     </div>
   </div>
   <div class="mdui-container" style="position: relative;">
@@ -933,10 +925,15 @@
               });
             }
           }, 1500);
-          var omVer = document.getElementById('rnx_om_ver');
-          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
           var thVer = document.getElementById('rnx_theme_ver');
-          if (thVer && thVer.textContent.indexOf('<!--') > -1) thVer.textContent = '—';
+          if (thVer) {
+            var thText = thVer.textContent;
+            if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
+            else {
+              var thM = thText.match(/@([0-9a-f]+)\//);
+              if (thM) thVer.textContent = thM[1];
+            }
+          }
         }
         (function () {
           var menu = document.getElementById('admin-menu');
@@ -1500,6 +1497,7 @@
     <!--IsFileEnd-->
   </div>
   <div class="mdui-text-center mdui-typo" id="footer"  style="position: relative;"></div>
+  <div class="rnx-ver" id="rnx_ver_watermark">renexmoe-ii <span id="rnx_theme_ver"><!--ThemeUrl--></span></div>
 </body>
 
 
