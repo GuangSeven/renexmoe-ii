@@ -337,6 +337,7 @@
       height: 100%;
       left: 0;
       filter: blur(0px);
+      pointer-events: none;
     }
 
     ul.mdui-menu{
@@ -822,6 +823,14 @@
               rnxGetAllLinks();
             }
           }, true);
+          document.addEventListener('click', function () {
+            setTimeout(function () {
+              if (document.querySelector('.mdui-dialog-open') || document.querySelector('.mdui-drawer-open')) return;
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
+            }, 350);
+          });
         }
         (function () {
           var menu = document.getElementById('admin-menu');
