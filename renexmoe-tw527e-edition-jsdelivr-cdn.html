@@ -734,17 +734,8 @@
           }, true);
           document.addEventListener('click', function (e) {
             if (e.target && e.target.closest && e.target.closest('.mdui-dialog-open')) return;
-            var before = [];
-            document.querySelectorAll('.mdui-dialog-open').forEach(function (el) { before.push(el); });
             setTimeout(function () {
-              before.forEach(function (el) {
-                if (el.classList.contains('mdui-dialog-open')) {
-                  var inst = rnxRealInst(el);
-                  if (inst) inst.close();
-                  else rnxForceClose(el);
-                }
-              });
-              if (!document.querySelector('.mdui-dialog-open')) {
+              if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
                 document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
                   o.classList.remove('mdui-overlay-show');
                 });
@@ -783,8 +774,9 @@
             var thText = thVer.textContent;
             if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
             else {
-              var thM = thText.match(/@([0-9a-f]+)\//);
+              var thM = thText.match(/@([^\/]+)\//);
               if (thM) thVer.textContent = thM[1];
+              else thVer.textContent = '—';
             }
           }
           var omVer = document.getElementById('rnx_om_ver');
