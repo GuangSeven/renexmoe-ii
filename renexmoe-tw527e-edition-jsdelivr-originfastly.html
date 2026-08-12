@@ -124,34 +124,7 @@
       font-size: 12px;
       color: rgba(255, 255, 255, 0.6);
       padding: 0 8px;
-      margin-right: auto;
-    }
-    #rnx_ctxmenu {
-      position: fixed;
-      z-index: 9999;
-      display: none;
-      min-width: 160px;
-      padding: 4px 0;
-      border-radius: 8px;
-      background-color: #2d2d2d;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-    .rnx_ctx_item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 14px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .rnx_ctx_item:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-    }
-    .rnx_ctx_item .mdui-icon {
-      font-size: 18px;
-      color: rgba(255, 255, 255, 0.7);
+      margin-left: auto;
     }
 
     *{
@@ -466,13 +439,6 @@
     </div>
     <!--UploadJsEnd-->
     <!--GuestUpStart-->
-    <div id="rnx_ctxmenu">
-      <a class="rnx_ctx_item" data-act="delete"><i class="mdui-icon material-icons">delete</i>删除</a>
-      <a class="rnx_ctx_item" data-act="move"><i class="mdui-icon material-icons">drive_file_move</i>移动到</a>
-      <a class="rnx_ctx_item" data-act="copy"><i class="mdui-icon material-icons">content_copy</i>复制到</a>
-      <a class="rnx_ctx_item" data-act="rename"><i class="mdui-icon material-icons">edit</i>重命名</a>
-    </div>
-
     <div class="mdui-dialog" id="rnx_del_dialog">
       <div class="mdui-dialog-title"><i class="mdui-icon material-icons">delete</i>&nbsp;删除</div>
       <div class="mdui-dialog-content" id="rnx_del_content"></div>
@@ -505,7 +471,7 @@
     </div>
 
     <div class="mdui-dialog" id="rnx_mov_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">drive_file_move</i>&nbsp;移动到</div>
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">swap_horiz</i>&nbsp;移动到</div>
       <div class="mdui-dialog-content">
         <div class="mdui-textfield mdui-textfield-floating-label">
           <label class="mdui-textfield-label">要移动到的路径</label>
@@ -640,42 +606,76 @@
           if (sel) sel.selectedIndex = 0;
           rnxOpenDialog('rnx_mov_dialog');
         }
-        document.addEventListener('contextmenu', function (e) {
-          if (e.target.closest && e.target.closest('#file-list li')) {
-            var it = rnxCtxRow(e);
-            if (it) {
+        if (!window.rnxDocBound) {
+          window.rnxDocBound = true;
+          document.addEventListener('contextmenu', function (e) {
+            rnxCtxItem = rnxCtxRow(e);
+            document.querySelectorAll('#admin-menu .rnx_ctx_li').forEach(function (el) {
+              el.style.display = rnxCtxItem ? '' : 'none';
+            });
+          });
+          document.addEventListener('click', function (e) {
+            var it = e.target.closest ? e.target.closest('#admin-menu .rnx_ctx_item') : null;
+            if (!it || !rnxCtxItem) return;
+            var act = it.getAttribute('data-act');
+            if (act == 'delete') rnxOpenDel([rnxCtxItem]);
+            else if (act == 'move') rnxOpenMov([rnxCtxItem]);
+            else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
+            else if (act == 'rename') rnxOpenRen(rnxCtxItem);
+          });
+          document.addEventListener('click', function (e) {
+            if (!e.target || e.target.id !== 'rnx_ck_all') return;
+            var all = document.querySelectorAll('#file-list .rnx_ck');
+            var checked = document.querySelectorAll('#file-list .rnx_ck:checked').length;
+            var doCheck = checked === 0;
+            all.forEach(function (el) { el.checked = doCheck; });
+            e.target.checked = false;
+            rnxAdmBarUpdate();
+          });
+          document.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('.getalllink')) {
               e.preventDefault();
-              rnxCtxItem = it;
-              var m = document.getElementById('rnx_ctxmenu');
-              m.style.display = 'block';
-              var x = e.clientX, y = e.clientY;
-              var mw = m.offsetWidth, mh = m.offsetHeight;
-              if (x + mw > window.innerWidth) x = window.innerWidth - mw - 4;
-              if (y + mh > window.innerHeight) y = window.innerHeight - mh - 4;
-              m.style.left = Math.max(0, x) + 'px';
-              m.style.top = Math.max(0, y) + 'px';
+              e.stopPropagation();
+              rnxGetAllLinks();
             }
-          } else {
-            var m2 = document.getElementById('rnx_ctxmenu');
-            if (m2) m2.style.display = 'none';
-          }
-        });
-        document.addEventListener('click', function (e) {
-          var m = document.getElementById('rnx_ctxmenu');
-          if (m && m.style.display == 'block' && !m.contains(e.target)) m.style.display = 'none';
-          var it = e.target.closest ? e.target.closest('.rnx_ctx_item') : null;
-          if (!it || !rnxCtxItem) return;
-          m.style.display = 'none';
-          var act = it.getAttribute('data-act');
-          if (act == 'delete') rnxOpenDel([rnxCtxItem]);
-          else if (act == 'move') rnxOpenMov([rnxCtxItem]);
-          else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
-          else if (act == 'rename') rnxOpenRen(rnxCtxItem);
-        });
-        window.addEventListener('scroll', function () {
-          var m = document.getElementById('rnx_ctxmenu');
-          if (m) m.style.display = 'none';
-        });
+          }, true);
+        }
+        (function () {
+          var menu = document.getElementById('admin-menu');
+          if (!menu || menu.getAttribute('data-rnx-items')) return;
+          menu.setAttribute('data-rnx-items', '1');
+          var defs = [
+            { act: 'delete', icon: 'delete', text: '删除' },
+            { act: 'move', icon: 'swap_horiz', text: '移动到' },
+            { act: 'copy', icon: 'content_copy', text: '复制到' },
+            { act: 'rename', icon: 'edit', text: '重命名' }
+          ];
+          defs.forEach(function (d) {
+            var li = document.createElement('li');
+            li.className = 'mdui-menu-item rnx_ctx_li';
+            li.innerHTML = '<a class="mdui-ripple rnx_ctx_item" data-act="' + d.act + '">'
+              + '<i class="mdui-menu-item-icon mdui-icon material-icons">' + d.icon + '</i>' + d.text + '</a>';
+            menu.appendChild(li);
+          });
+        })();
+        function rnxGetAllLinks() {
+          var urls = [];
+          document.querySelectorAll('#file-list li .forcedownload a').forEach(function (a) {
+            var h = a.getAttribute('href');
+            if (h) urls.push(new URL(h, location.href).href);
+          });
+          var esc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+          mdui.dialog({
+            title: '全部链接',
+            content: urls.length > 0
+              ? '<div class="mdui-textfield"><textarea class="mdui-textfield-input" readonly rows="8" style="width:100%;resize:vertical">' + esc(urls.join('\n')) + '</textarea></div>'
+              : '<div class="mdui-typo">当前目录没有可复制的文件链接</div>',
+            buttons: [
+              { text: '复制', onClick: function () { rnxCopyText(urls.join('\n')); } },
+              { text: '确定', onClick: function () {} }
+            ]
+          });
+        }
         rnxBind('rnx_del_ok', function () {
           rnxCloseDialog('rnx_del_dialog');
           rnxAdmSeq(rnxDelItems, function (it) {
@@ -735,11 +735,6 @@
           if (items.length < 1) { mdui.alert('仅文件可获取链接'); return; }
           rnxCopyText(items.map(function (it) { return new URL(it.url, location.href).href; }).join('\n'));
         });
-        rnxBind('rnx_bar_clear', function () {
-          document.querySelectorAll('#file-list .rnx_ck:checked').forEach(function (el) { el.checked = false; });
-          rnxAdmBarUpdate();
-        });
-
         var rnxList = document.getElementById('file-list');
         if (rnxList) rnxList.addEventListener('change', function (e) {
           if (e.target && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
@@ -794,10 +789,9 @@
       <span class="rnx-admbar-tip">已选 <b id="rnx_adm_count">0</b> 项</span>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_download" disabled><i class="mdui-icon material-icons">file_download</i>&nbsp;下载</button>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_delete" disabled><i class="mdui-icon material-icons">delete</i>&nbsp;删除</button>
-      <button class="mdui-btn mdui-ripple" id="rnx_bar_move" disabled><i class="mdui-icon material-icons">drive_file_move</i>&nbsp;移动</button>
+      <button class="mdui-btn mdui-ripple" id="rnx_bar_move" disabled><i class="mdui-icon material-icons">swap_horiz</i>&nbsp;移动</button>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_rename" disabled><i class="mdui-icon material-icons">edit</i>&nbsp;重命名</button>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_link" disabled><i class="mdui-icon material-icons">link</i>&nbsp;获取链接</button>
-      <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_bar_clear" title="取消选择"><i class="mdui-icon material-icons">close</i></button>
     </div>
     <!--GuestUpEnd-->
     <div class="mdui-row mdui-shadow-3" style="margin: 20px 0; border-radius: 8px; background-color: rgb(22 22 22 / 43%);">
@@ -805,7 +799,9 @@
         <li class="mdui-list-item mdui-ripple">
           <div class="mdui-row mdui-col-xs-12">
             <!--GuestUpStart-->
-            <div class="mdui-col-xs-1 mdui-col-sm-1"></div>
+            <div class="mdui-col-xs-1 mdui-col-sm-1 mdui-text-center">
+              <input type="checkbox" id="rnx_ck_all" title="全选/取消全选">
+            </div>
             <!--GuestUpEnd-->
             <div class="mdui-col-xs-11 mdui-col-sm-6">
               <!--constStr@File--><i class="mdui-icon material-icons icon-sort" data-sort="name"
@@ -1375,8 +1371,10 @@
       window.location.reload();
     }
   }
-  document.addEventListener('change', function (e) {
-    if (!e.target || e.target.id !== 'upload_file') return;
+  if (!window.rnxUploadBound) {
+    window.rnxUploadBound = true;
+    document.addEventListener('change', function (e) {
+      if (!e.target || e.target.id !== 'upload_file') return;
     var rnxSelFiles = Array.prototype.slice.call(e.target.files);
     var l = document.getElementById('upload_file_label');
     if (l) l.innerHTML = rnxSelFiles.length + ' / ' + (e.target.webkitdirectory ? '<!--constStr@UploadFolder-->' : '<!--constStr@UploadFile-->');
@@ -1403,7 +1401,8 @@
     if (picked) picked.style.display = rnxSelFiles.length > 0 ? '' : 'none';
     var submit = document.getElementById('upload_submit');
     if (submit) submit.style.display = rnxSelFiles.length > 0 ? '' : 'none';
-  });
+    });
+  }
 </script>
 <!--UploadJsEnd-->
 
