@@ -465,7 +465,7 @@
       </div>
     </div>
     <!--UploadJsEnd-->
-    <!--AdminStart-->
+    <!--GuestUpStart-->
     <div id="rnx_ctxmenu">
       <a class="rnx_ctx_item" data-act="delete"><i class="mdui-icon material-icons">delete</i>删除</a>
       <a class="rnx_ctx_item" data-act="move"><i class="mdui-icon material-icons">drive_file_move</i>移动到</a>
@@ -728,14 +728,6 @@
           document.querySelectorAll('#file-list .rnx_ck:checked').forEach(function (el) { el.checked = false; });
           rnxAdmBarUpdate();
         });
-        document.getElementById('rnx_bar_setup').addEventListener('click', function () {
-          location.href = '?setup';
-        });
-        document.getElementById('rnx_bar_logout').addEventListener('click', function () {
-          document.cookie = 'admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          localStorage.removeItem('admin');
-          location.reload();
-        });
         var rnxList = document.getElementById('file-list');
         if (rnxList) rnxList.addEventListener('change', function (e) {
           if (e.target && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
@@ -743,7 +735,7 @@
         rnxAdmBarUpdate();
       })();
     </script>
-    <!--AdminEnd-->
+    <!--GuestUpEnd-->
     <!--EncryptedStart-->
     <div class="mdui-center" style="margin: 20px auto;max-width: 600px;">
       <br />
@@ -785,7 +777,7 @@
       <textarea id="head-md"><!--HeadmdContent--></textarea>
     </div>
     <!--HeadmdEnd-->
-    <!--AdminStart-->
+    <!--GuestUpStart-->
     <div class="rnx-admbar mdui-shadow-1" id="rnx_admbar">
       <span class="rnx-admbar-tip">已选 <b id="rnx_adm_count">0</b> 项</span>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_download" disabled><i class="mdui-icon material-icons">file_download</i>&nbsp;下载</button>
@@ -794,17 +786,15 @@
       <button class="mdui-btn mdui-ripple" id="rnx_bar_rename" disabled><i class="mdui-icon material-icons">edit</i>&nbsp;重命名</button>
       <button class="mdui-btn mdui-ripple" id="rnx_bar_link" disabled><i class="mdui-icon material-icons">link</i>&nbsp;获取链接</button>
       <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_bar_clear" title="取消选择"><i class="mdui-icon material-icons">close</i></button>
-      <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_bar_setup" title="设置"><i class="mdui-icon material-icons">settings</i></button>
-      <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_bar_logout" title="退出登录"><i class="mdui-icon material-icons">exit_to_app</i></button>
     </div>
-    <!--AdminEnd-->
+    <!--GuestUpEnd-->
     <div class="mdui-row mdui-shadow-3" style="margin: 20px 0; border-radius: 8px; background-color: rgb(22 22 22 / 43%);">
       <ul class="mdui-list" id="file-list">
         <li class="mdui-list-item mdui-ripple">
           <div class="mdui-row mdui-col-xs-12">
-            <!--AdminStart-->
+            <!--GuestUpStart-->
             <div class="mdui-col-xs-1 mdui-col-sm-1"></div>
-            <!--AdminEnd-->
+            <!--GuestUpEnd-->
             <div class="mdui-col-xs-11 mdui-col-sm-6">
               <!--constStr@File--><i class="mdui-icon material-icons icon-sort" data-sort="name"
                 data-order="less">expand_less</i>
@@ -837,13 +827,13 @@
           data-sort-date="<!--lastModifiedDateTime-->" data-sort-size="<!--size-->" style="padding-right: 3.3rem">
           <a href="<!--FileEncodeReplaceUrl-->/">
             <div class="mdui-row mdui-col-sm-12">
-              <!--AdminStart-->
+              <!--GuestUpStart-->
               <div class="mdui-col-xs-1 mdui-col-sm-1 mdui-text-center">
                 <input type="checkbox" class="rnx_ck" data-name="<!--FileEncodeReplaceName-->"
                   data-id="<!--FileId-->" data-url="<!--FileEncodeReplaceUrl-->/" data-type="folder"
                   onclick="event.stopPropagation();">
               </div>
-              <!--AdminEnd-->
+              <!--GuestUpEnd-->
               <div class="mdui-col-xs-11 mdui-col-sm-6 mdui-text-truncate">
                 <i class="mdui-icon material-icons">folder_open</i><span>
                   <!--FileEncodeReplaceName-->
@@ -865,13 +855,13 @@
           <a class="<!--FileExtType-->" data-name="<!--FileEncodeReplaceName-->"
             href="<!--FileEncodeReplaceUrl-->?preview" aria-label="文件">
             <div class="mdui-row mdui-col-sm-12">
-              <!--AdminStart-->
+              <!--GuestUpStart-->
               <div class="mdui-col-xs-1 mdui-col-sm-1 mdui-text-center">
                 <input type="checkbox" class="rnx_ck" data-name="<!--FileEncodeReplaceName-->"
                   data-id="<!--FileId-->" data-url="<!--FileEncodeReplaceUrl-->" data-type="file"
                   onclick="event.stopPropagation();">
               </div>
-              <!--AdminEnd-->
+              <!--GuestUpEnd-->
               <div class="mdui-col-xs-11 mdui-col-sm-6 mdui-text-truncate">
 
                 <i class="mdui-icon material-icons">
