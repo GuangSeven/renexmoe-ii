@@ -628,12 +628,47 @@
           if (!el) return null;
           var inst = rnxDlgCache[id];
           if (!inst || inst.$element[0] !== el) {
-            inst = new mdui.Dialog(el);
+            inst = new mdui.Dialog(el, { history: false });
             rnxDlgCache[id] = inst;
+            try {
+              if (!mdui.$(el).data('_mdui_dialog')) mdui.$(el).data('_mdui_dialog', inst);
+            } catch (e) {}
           }
           return inst;
         }
-        function rnxOpenDialog(id) { var d = rnxDialog(id); if (d) d.open(); }
+        function rnxRealInst(el) {
+          try {
+            if (window.mdui && mdui.$(el) && mdui.$(el).data) {
+              var inst = mdui.$(el).data('_mdui_dialog');
+              if (inst && inst.close) return inst;
+            }
+          } catch (e) {}
+          return null;
+        }
+        function rnxForceClose(el) {
+          el.classList.remove('mdui-dialog-open');
+          el.style.display = 'none';
+        }
+        function rnxOpenDialog(id) {
+          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
+            if (el.id == id) return;
+            var inst = rnxRealInst(el);
+            if (inst) inst.close();
+            else rnxForceClose(el);
+          });
+          var d = rnxDialog(id);
+          if (d) d.open();
+        }
+        function rnxCloseAllOpen() {
+          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
+            var inst = rnxRealInst(el);
+            if (inst) inst.close();
+            else rnxForceClose(el);
+          });
+          document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+            o.classList.remove('mdui-overlay-show');
+          });
+        }
         function rnxCloseDialog(id) {
           var d = rnxDialog(id);
           if (d) d.close();
@@ -823,13 +858,39 @@
               rnxGetAllLinks();
             }
           }, true);
-          document.addEventListener('click', function () {
+          document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('.mdui-dialog-open')) return;
+            var before = [];
+            document.querySelectorAll('.mdui-dialog-open').forEach(function (el) { before.push(el); });
             setTimeout(function () {
-              if (document.querySelector('.mdui-dialog-open') || document.querySelector('.mdui-drawer-open')) return;
-              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-                o.classList.remove('mdui-overlay-show');
+              before.forEach(function (el) {
+                if (el.classList.contains('mdui-dialog-open')) {
+                  var inst = rnxRealInst(el);
+                  if (inst) inst.close();
+                  else rnxForceClose(el);
+                }
               });
+              if (!document.querySelector('.mdui-dialog-open')) {
+                document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                  o.classList.remove('mdui-overlay-show');
+                });
+              }
             }, 350);
+          }, true);
+          document.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('[mdui-dialog]')) {
+              setTimeout(function () {
+                document.querySelectorAll('#rnx_del_dialog,#rnx_ren_dialog,#rnx_cpy_dialog,#rnx_mov_dialog').forEach(function (el) {
+                  if (el.classList.contains('mdui-dialog-open')) {
+                    var d = rnxDialog(el.id);
+                    if (d && d.close) d.close();
+                  }
+                });
+              }, 60);
+            }
+          }, true);
+          document.addEventListener('pjax:success', function () {
+            setTimeout(rnxCloseAllOpen, 50);
           });
         }
         (function () {
@@ -851,6 +912,7 @@
           });
         })();
         function rnxGetAllLinks() {
+          rnxCloseAllOpen();
           var urls = [];
           document.querySelectorAll('#file-list li .forcedownload a').forEach(function (a) {
             var h = a.getAttribute('href');
