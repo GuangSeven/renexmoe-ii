@@ -81,7 +81,7 @@
     }
 
     #upload_preview, #upload_list {
-      max-height: 50vh;
+      max-height: 66.67vh;
       overflow-y: auto;
     }
 
@@ -91,7 +91,7 @@
       background-color: rgba(76, 175, 80, 0.05);
     }
 
-    .rnx_ck {
+    .rnx_ck, #rnx_ck_all {
       accent-color: #ff4081;
       cursor: pointer;
       width: 18px;
@@ -125,6 +125,64 @@
       color: rgba(255, 255, 255, 0.6);
       padding: 0 8px;
       margin-left: auto;
+    }
+    .rnx-browser {
+      width: 92vw;
+      max-width: 640px;
+      height: 62vh;
+      max-height: 62vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .rnx-browser .mdui-dialog-content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+    }
+    .rnx-browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .rnx-browser-path {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      word-break: break-all;
+    }
+    .rnx-browser-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 8px;
+    }
+    .rnx-browser-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      user-select: none;
+    }
+    .rnx-browser-item:hover {
+      background-color: rgba(255, 255, 255, 0.07);
+    }
+    .rnx-browser-item .mdui-icon {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 20px;
+    }
+    .rnx-browser-item .rnx-browser-spacer {
+      flex: 1;
+    }
+    .rnx-browser-item .rnx-browser-open {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.4);
     }
 
     *{
@@ -448,9 +506,15 @@
       </div>
     </div>
 
-    <div class="mdui-dialog" id="rnx_cpy_dialog">
+    <div class="mdui-dialog rnx-browser" id="rnx_cpy_dialog">
       <div class="mdui-dialog-title"><i class="mdui-icon material-icons">content_copy</i>&nbsp;复制到</div>
-      <div class="mdui-dialog-content" id="rnx_cpy_content"></div>
+      <div class="mdui-dialog-content">
+        <div class="rnx-browser-bar">
+          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_cpy_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
+          <span class="rnx-browser-path" id="rnx_cpy_path"></span>
+        </div>
+        <div class="rnx-browser-list" id="rnx_cpy_list"></div>
+      </div>
       <div class="mdui-dialog-actions">
         <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
         <button class="mdui-btn mdui-ripple" id="rnx_cpy_ok">复制</button>
@@ -470,21 +534,14 @@
       </div>
     </div>
 
-    <div class="mdui-dialog" id="rnx_mov_dialog">
+    <div class="mdui-dialog rnx-browser" id="rnx_mov_dialog">
       <div class="mdui-dialog-title"><i class="mdui-icon material-icons">swap_horiz</i>&nbsp;移动到</div>
       <div class="mdui-dialog-content">
-        <div class="mdui-textfield mdui-textfield-floating-label">
-          <label class="mdui-textfield-label">要移动到的路径</label>
-          <input class="mdui-textfield-input" id="rnx_mov_path" type="text" placeholder="填文件夹名，留空则从下方选择">
+        <div class="rnx-browser-bar">
+          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_mov_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
+          <span class="rnx-browser-path" id="rnx_mov_path"></span>
         </div>
-        <select id="rnx_mov_sel">
-          <!--MoveRootStart-->
-          <option value="/../"><!--constStr@ParentDir--></option>
-          <!--MoveRootEnd-->
-          <!--MoveDirsStart-->
-          <option value="<!--MoveDirsValue-->"><!--MoveDirsValue--></option>
-          <!--MoveDirsEnd-->
-        </select>
+        <div class="rnx-browser-list" id="rnx_mov_list"></div>
       </div>
       <div class="mdui-dialog-actions">
         <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
@@ -515,9 +572,12 @@
           return items;
         }
         function rnxAdmBarUpdate() {
+          var cks = document.querySelectorAll('#file-list .rnx_ck');
           var n = document.querySelectorAll('#file-list .rnx_ck:checked').length;
           var cnt = document.getElementById('rnx_adm_count');
           if (cnt) cnt.textContent = n;
+          var all = document.getElementById('rnx_ck_all');
+          if (all) all.checked = cks.length > 0 && n === cks.length;
           function b(id, dis) { var el = document.getElementById(id); if (el) el.disabled = dis; }
           b('rnx_bar_download', n < 1);
           b('rnx_bar_delete', n < 1);
@@ -590,9 +650,7 @@
           rnxOpenDialog('rnx_del_dialog');
         }
         function rnxOpenCpy(items) {
-          rnxCpyItems = items;
-          document.getElementById('rnx_cpy_content').textContent = '确认将「' + items.map(function (x) { return x.name; }).join('、') + '」复制到当前目录？';
-          rnxOpenDialog('rnx_cpy_dialog');
+          rnxBrowseOpen('cpy', items);
         }
         function rnxOpenRen(item) {
           rnxRenItem = item;
@@ -600,11 +658,81 @@
           rnxOpenDialog('rnx_ren_dialog');
         }
         function rnxOpenMov(items) {
-          rnxMovItems = items;
-          document.getElementById('rnx_mov_path').value = '';
-          var sel = document.getElementById('rnx_mov_sel');
-          if (sel) sel.selectedIndex = 0;
-          rnxOpenDialog('rnx_mov_dialog');
+          rnxBrowseOpen('mov', items);
+        }
+        var rnxBrowse = { mode: '', path: '/', stack: [], target: [] };
+        function rnxBrowsePathClean(p) {
+          if (p == '' || p == '/') return '/';
+          if (p.slice(-1) == '/') p = p.slice(0, -1);
+          return p;
+        }
+        function rnxBrowseLoad() {
+          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
+          var pathEl = document.getElementById('rnx_' + box + '_path');
+          var listEl = document.getElementById('rnx_' + box + '_list');
+          var upBtn = document.getElementById('rnx_' + box + '_up');
+          if (pathEl) pathEl.textContent = rnxBrowse.path;
+          if (upBtn) upBtn.disabled = rnxBrowse.path == '/';
+          if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px">加载中...</div>';
+          var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path + '/') + '?json=1';
+          fetch(url, { headers: { 'x-requested-with': 'XMLHttpRequest' } }).then(function (r) {
+            return r.json();
+          }).then(function (j) {
+            if (!listEl) return;
+            if (!j || j.type != 'folder') { listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">无法打开该文件夹</div>'; return; }
+            var folders = [];
+            var list = j.list || {};
+            Object.keys(list).forEach(function (k) {
+              var it = list[k];
+              if (it && it.type == 'folder') folders.push(it.name || k);
+            });
+            folders.sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); });
+            listEl.innerHTML = '';
+            if (folders.length == 0) {
+              listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:24px">此文件夹没有子目录</div>';
+              return;
+            }
+            folders.forEach(function (name) {
+              var row = document.createElement('div');
+              row.className = 'rnx-browser-item';
+              row.innerHTML = '<i class="mdui-icon material-icons">folder_open</i><span class="rnx-browser-name"></span>'
+                + '<span class="rnx-browser-spacer"></span><span class="rnx-browser-open">打开</span>';
+              row.querySelector('.rnx-browser-name').textContent = name;
+              row.addEventListener('click', function () {
+                rnxBrowse.stack.push(rnxBrowse.path);
+                rnxBrowse.path = rnxBrowsePathClean(rnxBrowse.path) + '/' + name;
+                rnxBrowseLoad();
+              });
+              listEl.appendChild(row);
+            });
+          }).catch(function () {
+            if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">加载失败</div>';
+          });
+        }
+        function rnxBrowseUp() {
+          if (rnxBrowse.stack.length == 0) return;
+          rnxBrowse.path = rnxBrowse.stack.pop();
+          rnxBrowseLoad();
+        }
+        function rnxBrowseOpen(mode, items) {
+          rnxBrowse.mode = mode;
+          rnxBrowse.target = items;
+          rnxBrowse.path = rnxBrowsePathClean(window.location.pathname);
+          rnxBrowse.stack = [];
+          rnxBrowseLoad();
+          rnxOpenDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
+        }
+        function rnxBrowseConfirm() {
+          var mode = rnxBrowse.mode;
+          var target = rnxBrowsePathClean(rnxBrowse.path);
+          var title = mode == 'mov' ? '移动' : '复制';
+          rnxCloseDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
+          rnxAdmSeq(rnxBrowse.target, function (it) {
+            if (mode == 'mov') {
+              return 'move_name=' + encodeURIComponent(it.name) + '&move_folder=' + encodeURIComponent(target) + '&move_fileid=' + encodeURIComponent(it.id || '');
+            }
+            return 'copy_name=' + encodeURIComponent(it.name) + '&copy_folder=' + encodeURIComponent(target) + '&copy_fileid=' + encodeURIComponent(it.id || '');
+          }, title, function () { location.reload(); });
         }
         if (!window.rnxDocBound) {
           window.rnxDocBound = true;
@@ -629,7 +757,6 @@
             var checked = document.querySelectorAll('#file-list .rnx_ck:checked').length;
             var doCheck = checked === 0;
             all.forEach(function (el) { el.checked = doCheck; });
-            e.target.checked = false;
             rnxAdmBarUpdate();
           });
           document.addEventListener('click', function (e) {
@@ -682,12 +809,8 @@
             return 'delete_name=' + encodeURIComponent(it.name) + '&delete_fileid=' + encodeURIComponent(it.id || '');
           }, '删除', function () { location.reload(); });
         });
-        rnxBind('rnx_cpy_ok', function () {
-          rnxCloseDialog('rnx_cpy_dialog');
-          rnxAdmSeq(rnxCpyItems, function (it) {
-            return 'copy_name=' + encodeURIComponent(it.name) + '&copy_fileid=' + encodeURIComponent(it.id || '');
-          }, '复制', function () { location.reload(); });
-        });
+        rnxBind('rnx_cpy_ok', rnxBrowseConfirm);
+        rnxBind('rnx_cpy_up', rnxBrowseUp);
         rnxBind('rnx_ren_ok', function () {
           var nv = document.getElementById('rnx_ren_input').value.trim();
           if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
@@ -699,16 +822,8 @@
             location.reload();
           });
         });
-        rnxBind('rnx_mov_ok', function () {
-          var p = document.getElementById('rnx_mov_path').value.trim();
-          var sel = document.getElementById('rnx_mov_sel');
-          var folder = p || (sel ? sel.value : '');
-          if (!folder) { mdui.alert('请输入要移动到的路径'); return; }
-          rnxCloseDialog('rnx_mov_dialog');
-          rnxAdmSeq(rnxMovItems, function (it) {
-            return 'move_name=' + encodeURIComponent(it.name) + '&move_folder=' + encodeURIComponent(folder) + '&move_fileid=' + encodeURIComponent(it.id || '');
-          }, '移动', function () { location.reload(); });
-        });
+        rnxBind('rnx_mov_ok', rnxBrowseConfirm);
+        rnxBind('rnx_mov_up', rnxBrowseUp);
         rnxBind('rnx_bar_download', function () {
           var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
           if (items.length < 1) { mdui.alert('仅文件可下载'); return; }
