@@ -138,6 +138,7 @@
       max-height: 62vh;
       display: flex;
       flex-direction: column;
+      z-index: 9500;
     }
     .rnx-browser .mdui-dialog-content {
       flex: 1;
@@ -462,21 +463,19 @@
     <!--LoginStart-->
     <div class="mdui-dialog" id="login_input">
       <div class="mdui-dialog-title"><!--constStr@Login--></div>
-      <div class="mdui-dialog-content" style="height: 108px">
-        <form action="<!--IsPreview?-->login=admin" method="post" onsubmit="return sha1loginpass(this);">
+      <form action="<!--IsPreview?-->login=admin" method="post" onsubmit="return sha1loginpass(this);">
+        <div class="mdui-dialog-content">
           <div class="mdui-textfield mdui-textfield-floating-label">
             <i class="mdui-icon material-icons">lock</i><label class="mdui-textfield-label"><!--constStr@InputPassword--></label>
-            <input class="mdui-textfield-input" id="login_input" name="password1" type="password">
+            <input class="mdui-textfield-input" id="login_password" name="password1" type="password">
             <input name="timestamp" type="hidden" value="">
           </div>
-      </div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close="" id="login_close">取消</button>
-        <button id="login_btn_bak" class="mdui-btn mdui-ripple" type="submit" value="<!--constStr@Login-->">
-          <!--constStr@Login-->
-        </button>
-        </form>
-      </div>
+        </div>
+        <div class="mdui-dialog-actions">
+          <button type="button" class="mdui-btn mdui-ripple" mdui-dialog-close id="login_close"><!--constStr@Close--></button>
+          <button id="login_btn_bak" class="mdui-btn mdui-ripple" type="submit"><!--constStr@Login--></button>
+        </div>
+      </form>
     </div>
     <!--LoginEnd-->
     <!--UploadJsStart-->
