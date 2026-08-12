@@ -150,9 +150,16 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .rnx-browser-path {
+      flex: 1;
+      min-width: 0;
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.8);
-      word-break: break-all;
+      color: rgba(255, 255, 255, 0.85);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      outline: none;
+      padding: 2px 4px;
+      font-family: inherit;
     }
     .rnx-browser-list {
       flex: 1;
@@ -511,7 +518,7 @@
       <div class="mdui-dialog-content">
         <div class="rnx-browser-bar">
           <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_cpy_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
-          <span class="rnx-browser-path" id="rnx_cpy_path"></span>
+          <input type="text" class="rnx-browser-path" id="rnx_cpy_path" placeholder="/" spellcheck="false">
         </div>
         <div class="rnx-browser-list" id="rnx_cpy_list"></div>
       </div>
@@ -539,7 +546,7 @@
       <div class="mdui-dialog-content">
         <div class="rnx-browser-bar">
           <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_mov_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
-          <span class="rnx-browser-path" id="rnx_mov_path"></span>
+          <input type="text" class="rnx-browser-path" id="rnx_mov_path" placeholder="/" spellcheck="false">
         </div>
         <div class="rnx-browser-list" id="rnx_mov_list"></div>
       </div>
@@ -672,7 +679,7 @@
           var pathEl = document.getElementById('rnx_' + box + '_path');
           var listEl = document.getElementById('rnx_' + box + '_list');
           var upBtn = document.getElementById('rnx_' + box + '_up');
-          if (pathEl) pathEl.textContent = rnxBrowse.path;
+          if (pathEl) pathEl.value = rnxBrowse.path;
           if (upBtn) upBtn.disabled = rnxBrowse.path == '/';
           if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px">加载中...</div>';
           var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path.split('/').map(encodeURIComponent).join('/') + '/') + '?json=1';
@@ -713,6 +720,18 @@
         function rnxBrowseUp() {
           if (rnxBrowse.stack.length == 0) return;
           rnxBrowse.path = rnxBrowse.stack.pop();
+          rnxBrowseLoad();
+        }
+        function rnxBrowseGoTo() {
+          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
+          var input = document.getElementById('rnx_' + box + '_path');
+          if (!input) return;
+          var p = input.value.trim();
+          if (p == '') return;
+          if (p.slice(0, 1) != '/') p = '/' + p;
+          p = rnxBrowsePathClean(p);
+          rnxBrowse.stack = [];
+          rnxBrowse.path = p;
           rnxBrowseLoad();
         }
         function rnxBrowseOpen(mode, items) {
@@ -814,6 +833,17 @@
         });
         rnxBind('rnx_cpy_ok', rnxBrowseConfirm);
         rnxBind('rnx_cpy_up', rnxBrowseUp);
+        (function () {
+          var p1 = document.getElementById('rnx_mov_path');
+          var p2 = document.getElementById('rnx_cpy_path');
+          function onEnter(e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            rnxBrowseGoTo();
+          }
+          if (p1) p1.addEventListener('keydown', onEnter);
+          if (p2) p2.addEventListener('keydown', onEnter);
+        })();
         rnxBind('rnx_ren_ok', function () {
           var nv = document.getElementById('rnx_ren_input').value.trim();
           if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
