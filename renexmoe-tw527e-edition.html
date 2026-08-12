@@ -695,7 +695,7 @@
             else if (act == 'move') rnxOpenMov([rnxCtxItem]);
             else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
             else if (act == 'rename') rnxOpenRen(rnxCtxItem);
-          });
+          }, true);
           document.addEventListener('click', function (e) {
             var t = e.target;
             if (!t || !t.closest) return;
@@ -789,7 +789,7 @@
           var omVer = document.getElementById('rnx_om_ver');
           if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
         }
-        (function () {
+        function rnxInjectMenu() {
           var menu = document.getElementById('admin-menu');
           if (!menu || menu.getAttribute('data-rnx-items')) return;
           menu.setAttribute('data-rnx-items', '1');
@@ -806,7 +806,17 @@
               + '<i class="mdui-menu-item-icon mdui-icon material-icons">' + d.icon + '</i>' + d.text + '</a>';
             menu.appendChild(li);
           });
-        })();
+        }
+        function rnxInitDom() {
+          rnxInjectMenu();
+          rnxAdmBarUpdate();
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', rnxInitDom);
+        } else {
+          rnxInitDom();
+        }
+        document.addEventListener('pjax:success', rnxInitDom);
         function rnxGetAllLinks() {
           rnxCloseAllOpen();
           var urls = [];
