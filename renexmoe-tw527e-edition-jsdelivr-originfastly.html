@@ -718,7 +718,9 @@
         function rnxBrowseOpen(mode, items) {
           rnxBrowse.mode = mode;
           rnxBrowse.target = items;
-          rnxBrowse.path = rnxBrowsePathClean(window.location.pathname);
+          var p = window.location.pathname;
+          try { p = decodeURIComponent(p); } catch (e) {}
+          rnxBrowse.path = rnxBrowsePathClean(p);
           rnxBrowse.stack = [];
           rnxBrowseLoad();
           rnxOpenDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
