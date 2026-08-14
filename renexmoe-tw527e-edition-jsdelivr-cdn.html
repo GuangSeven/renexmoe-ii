@@ -112,6 +112,39 @@
       margin: 6px 0 2px 0;
       border-radius: 8px;
       background-color: rgb(22 22 22 / 43%);
+      position: sticky;
+      top: 50px;
+      z-index: 900;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    @media (min-width: 600px) {
+      .rnx-admbar { top: 58px; }
+    }
+    @media (orientation: landscape) and (max-width: 959.9px) {
+      .rnx-admbar { top: 42px; }
+    }
+    .rnx-admbar::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+      background: linear-gradient(to bottom, rgb(22 22 22 / 0.55), rgb(22 22 22 / 0));
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%);
+    }
+    .rnx-admbar.rnx-stuck::after {
+      opacity: 1;
+    }
+    .rnx-admbar.rnx-stuck {
+      background-color: rgb(22 22 22 / 0.62);
     }
     .rnx-admbar .mdui-btn {
       min-width: 0;
@@ -606,6 +639,56 @@
             }).catch(fallback);
           } else fallback();
         }
+        function rnxFavLoad() {
+          try {
+            var a = JSON.parse(localStorage.getItem('rnx_favs') || '[]');
+            return Array.isArray(a) ? a : [];
+          } catch (e) { return []; }
+        }
+        function rnxFavSave(list) {
+          try { localStorage.setItem('rnx_favs', JSON.stringify(list)); } catch (e) {}
+        }
+        function rnxFavIs(item) {
+          if (!item || !item.url) return false;
+          return rnxFavLoad().some(function (f) { return f.u === item.url; });
+        }
+        function rnxToggleFav(item) {
+          if (!item || !item.url) return;
+          var list = rnxFavLoad();
+          var idx = -1;
+          list.forEach(function (f, i) { if (f.u === item.url) idx = i; });
+          var added = false;
+          if (idx > -1) { list.splice(idx, 1); } else { list.push({ n: item.name, u: item.url, t: item.type }); added = true; }
+          rnxFavSave(list);
+          rnxFavRender();
+          new mdui.Snackbar({ message: added ? '已收藏' : '已取消收藏' }).show();
+        }
+        function rnxFavRender() {
+          var area = document.getElementById('rnx_fav_area');
+          var list = document.getElementById('rnx_fav_list');
+          var favs = rnxFavLoad();
+          if (area) area.style.display = favs.length > 0 ? '' : 'none';
+          if (!list) return;
+          list.innerHTML = '';
+          favs.forEach(function (f) {
+            var li = document.createElement('li');
+            li.className = 'mdui-list-item mdui-ripple rnx_fav_item';
+            var href = f.u;
+            if (f.t === 'file' && href.indexOf('?') < 0) href += '?preview';
+            var ai = document.createElement('a');
+            ai.className = 'mdui-list-item-icon mdui-icon material-icons';
+            ai.setAttribute('href', href);
+            ai.textContent = f.t === 'folder' ? 'folder_open' : 'insert_drive_file';
+            var ac = document.createElement('a');
+            ac.className = 'mdui-list-item-content mdui-text-truncate';
+            ac.setAttribute('href', href);
+            ac.setAttribute('title', f.n);
+            ac.textContent = f.n;
+            li.appendChild(ai);
+            li.appendChild(ac);
+            list.appendChild(li);
+          });
+        }
         function rnxOpenDel(items) {
           rnxDelItems = items;
           document.getElementById('rnx_del_content').textContent = '是否确认要删除「' + items.map(function (x) { return x.name; }).join('、') + '」？';
@@ -731,6 +814,11 @@
             document.querySelectorAll('#admin-menu .rnx_ctx_li').forEach(function (el) {
               el.style.display = rnxCtxItem ? '' : 'none';
             });
+            var favItem = document.querySelector('#admin-menu .rnx_ctx_item[data-act="fav"]');
+            if (favItem && rnxCtxItem) {
+              var faved = rnxFavIs(rnxCtxItem);
+              favItem.innerHTML = '<i class="mdui-menu-item-icon mdui-icon material-icons">' + (faved ? 'star' : 'star_border') + '</i>' + (faved ? '取消收藏' : '收藏');
+            }
           });
           document.addEventListener('click', function (e) {
             var it = e.target.closest ? e.target.closest('#admin-menu .rnx_ctx_item') : null;
@@ -740,6 +828,7 @@
             else if (act == 'move') rnxOpenMov([rnxCtxItem]);
             else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
             else if (act == 'rename') rnxOpenRen(rnxCtxItem);
+            else if (act == 'fav') rnxToggleFav(rnxCtxItem);
           }, true);
           document.addEventListener('click', function (e) {
             var t = e.target;
@@ -835,7 +924,8 @@
             { act: 'delete', icon: 'delete', text: '删除' },
             { act: 'move', icon: 'swap_horiz', text: '移动到' },
             { act: 'copy', icon: 'content_copy', text: '复制到' },
-            { act: 'rename', icon: 'edit', text: '重命名' }
+            { act: 'rename', icon: 'edit', text: '重命名' },
+            { act: 'fav', icon: 'star_border', text: '收藏' }
           ];
           defs.forEach(function (d) {
             var li = document.createElement('li');
@@ -851,6 +941,8 @@
           rnxWatermark();
           var newEntry = document.getElementById('rnx_new_entry');
           if (newEntry) newEntry.style.display = document.getElementById('file-list') ? '' : 'none';
+          rnxFavRender();
+          rnxBarStickUpdate();
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', rnxInitDom);
@@ -957,6 +1049,27 @@
             if (wrap) wrap.style.display = e.target.value === 'file' ? '' : 'none';
           }
         });
+        var rnxBarScrollTick = false;
+        function rnxBarStickUpdate() {
+          var bar = document.getElementById('rnx_admbar');
+          if (!bar) return;
+          var hd = document.querySelector('.mdui-appbar-fixed');
+          var top = hd ? hd.offsetHeight : 64;
+          bar.classList.toggle('rnx-stuck', bar.getBoundingClientRect().top <= top + 0.5);
+        }
+        if (!window.rnxBarStickBound) {
+          window.rnxBarStickBound = true;
+          window.addEventListener('scroll', function () {
+            if (rnxBarScrollTick) return;
+            rnxBarScrollTick = true;
+            requestAnimationFrame(function () { rnxBarScrollTick = false; rnxBarStickUpdate(); });
+          }, { passive: true });
+          document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('#rnx_fav_list a')) {
+              document.body.classList.remove('mdui-drawer-body-left');
+            }
+          }, true);
+        }
         rnxAdmBarUpdate();
       })();
     </script>
@@ -1011,8 +1124,15 @@
       <!--GuestUpStart-->
       <li class="mdui-list-item mdui-ripple" id="rnx_new_entry">
         <a class="mdui-list-item-icon mdui-icon material-icons">create_new_folder</a><a
-          class="mdui-list-item-content">新建文件/文件夹</a>
+          class="mdui-list-item-content">新建</a>
       </li>
+      <!--GuestUpEnd-->
+      <!--GuestUpStart-->
+      <div id="rnx_fav_area" style="display:none">
+        <div class="mdui-divider"></div>
+        <ul id="rnx_fav_list" style="margin:0;padding:0;list-style:none"></ul>
+        <div class="mdui-divider"></div>
+      </div>
       <!--GuestUpEnd-->
       <!--MultiDiskAreaStart-->
       <div class="mdui-divider"></div>
@@ -1034,7 +1154,6 @@
         <i class="mdui-list-item-icon mdui-icon material-icons">info</i>
         <div class="mdui-list-item-content">关于主题</div>
       </li>
-      <div class="mdui-divider"></div>
       <li class="mdui-list-item mdui-ripple" id="select_language" style="overflow: visible;">
         <i class="mdui-list-item-icon mdui-icon material-icons">language</i>
         <div class="mdui-list-item-content" style="padding-top: 10px;padding-bottom: 10px;">
