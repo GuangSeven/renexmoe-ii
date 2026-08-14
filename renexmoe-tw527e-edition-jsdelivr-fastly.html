@@ -156,6 +156,11 @@
     @media (orientation: landscape) and (max-width: 959.9px) {
       .rnx-admbar.rnx-stuck { top: 46px; }
     }
+    #main-drawer > .mdui-list > li.mdui-list-item,
+    #main-drawer > .mdui-list > a.mdui-list-item {
+      padding-top: 22px;
+      padding-bottom: 22px;
+    }
     .rnx-admbar .mdui-btn {
       min-width: 0;
       font-size: 13px;
@@ -1188,19 +1193,7 @@
             rnxBarScrollTick = true;
             requestAnimationFrame(function () { rnxBarScrollTick = false; rnxBarStickUpdate(); });
           }, { passive: true });
-          document.addEventListener('click', function (e) {
-            if (e.target && e.target.closest && e.target.closest('#rnx_fav_list a')) {
-              document.body.classList.remove('mdui-drawer-body-left');
-              var d = document.getElementById('main-drawer');
-              if (d) {
-                d.classList.remove('mdui-drawer-open');
-                d.classList.add('mdui-drawer-close');
-              }
-              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-                o.classList.remove('mdui-overlay-show');
-              });
-            }
-          }, true);
+
         }
         rnxAdmBarUpdate();
       })();
