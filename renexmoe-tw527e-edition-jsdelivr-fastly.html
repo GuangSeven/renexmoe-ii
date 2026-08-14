@@ -117,6 +117,7 @@
       z-index: 900;
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
+      transition: top 0.18s, padding 0.18s, background-color 0.2s;
     }
     @media (min-width: 600px) {
       .rnx-admbar { top: 58px; }
@@ -144,7 +145,16 @@
       opacity: 1;
     }
     .rnx-admbar.rnx-stuck {
+      top: 54px;
+      padding-top: 10px;
+      padding-bottom: 10px;
       background-color: rgb(22 22 22 / 0.62);
+    }
+    @media (min-width: 600px) {
+      .rnx-admbar.rnx-stuck { top: 62px; }
+    }
+    @media (orientation: landscape) and (max-width: 959.9px) {
+      .rnx-admbar.rnx-stuck { top: 46px; }
     }
     .rnx-admbar .mdui-btn {
       min-width: 0;
@@ -639,55 +649,160 @@
             }).catch(fallback);
           } else fallback();
         }
-        function rnxFavLoad() {
-          try {
-            var a = JSON.parse(localStorage.getItem('rnx_favs') || '[]');
-            return Array.isArray(a) ? a : [];
-          } catch (e) { return []; }
+        var rnxFavList = [];
+        function rnxFavIcon(name, type) {
+          if (type === 'folder') return 'folder_open';
+          var ext = String(name).toLowerCase().split('.').pop();
+          var map = {
+            music: ['mp3', 'wma', 'flac', 'ape', 'wav', 'ogg', 'm4a'],
+            video: ['mp4', 'webm', 'mkv', 'mov', 'flv', 'blv', 'avi', 'wmv', 'm3u8', 'rm', '3gp', 'rmvb'],
+            img: ['ico', 'bmp', 'gif', 'jpg', 'jpeg', 'jpe', 'jfif', 'tif', 'tiff', 'png', 'heic', 'webp'],
+            pdf: ['pdf'],
+            txt: ['txt', 'log', 'bat', 'sh', 'php', 'asp', 'js', 'css', 'json', 'htm', 'html', 'c', 'cpp', 'md', 'py', 'omf'],
+            apk: ['apk'],
+            exe: ['exe']
+          };
+          var icons = { music: 'audiotrack', video: 'ondemand_video', img: 'image', pdf: 'picture_as_pdf', txt: 'description', apk: 'android', exe: 'desktop_windows' };
+          for (var k in map) { if (map[k].indexOf(ext) > -1) return icons[k]; }
+          return 'insert_drive_file';
         }
-        function rnxFavSave(list) {
-          try { localStorage.setItem('rnx_favs', JSON.stringify(list)); } catch (e) {}
+        function rnxFavUrlOf(item) {
+          var p = window.location.pathname;
+          if (p.charAt(p.length - 1) !== '/') p += '/';
+          var rel = encodeURIComponent(item.name) + (item.type === 'folder' ? '/' : '?preview');
+          var u = new URL(p + rel, window.location.href);
+          return u.pathname + u.search;
+        }
+        function rnxCurDir() {
+          var p = window.location.pathname;
+          try { p = decodeURIComponent(p); } catch (e) {}
+          if (p.charAt(p.length - 1) !== '/') p = p.substring(0, p.lastIndexOf('/') + 1);
+          return p;
+        }
+        function rnxFavDirOf(fav) {
+          var p = String(fav.u).split('?')[0];
+          try { p = decodeURIComponent(p); } catch (e) {}
+          if (p.charAt(p.length - 1) !== '/') p = p.substring(0, p.lastIndexOf('/') + 1);
+          return p;
+        }
+        function rnxFavBaseName(u) {
+          var p = String(u).split('?')[0];
+          try { p = decodeURIComponent(p); } catch (e) {}
+          if (p.charAt(p.length - 1) === '/') p = p.substring(0, p.length - 1);
+          var i = p.lastIndexOf('/');
+          return i > -1 ? p.substring(i + 1) : p;
         }
         function rnxFavIs(item) {
-          if (!item || !item.url) return false;
-          return rnxFavLoad().some(function (f) { return f.u === item.url; });
-        }
-        function rnxToggleFav(item) {
-          if (!item || !item.url) return;
-          var list = rnxFavLoad();
-          var idx = -1;
-          list.forEach(function (f, i) { if (f.u === item.url) idx = i; });
-          var added = false;
-          if (idx > -1) { list.splice(idx, 1); } else { list.push({ n: item.name, u: item.url, t: item.type }); added = true; }
-          rnxFavSave(list);
-          rnxFavRender();
-          new mdui.Snackbar({ message: added ? '已收藏' : '已取消收藏' }).show();
+          if (!item) return false;
+          var u = item.u || rnxFavUrlOf(item);
+          if (!u) return false;
+          return rnxFavList.some(function (f) { return f.u === u; });
         }
         function rnxFavRender() {
           var area = document.getElementById('rnx_fav_area');
           var list = document.getElementById('rnx_fav_list');
-          var favs = rnxFavLoad();
-          if (area) area.style.display = favs.length > 0 ? '' : 'none';
+          if (area) area.style.display = rnxFavList.length > 0 ? '' : 'none';
           if (!list) return;
           list.innerHTML = '';
-          favs.forEach(function (f) {
+          rnxFavList.forEach(function (f, idx) {
             var li = document.createElement('li');
             li.className = 'mdui-list-item mdui-ripple rnx_fav_item';
-            var href = f.u;
-            if (f.t === 'file' && href.indexOf('?') < 0) href += '?preview';
+            li.setAttribute('data-fav-idx', String(idx));
             var ai = document.createElement('a');
             ai.className = 'mdui-list-item-icon mdui-icon material-icons';
-            ai.setAttribute('href', href);
-            ai.textContent = f.t === 'folder' ? 'folder_open' : 'insert_drive_file';
+            ai.setAttribute('href', f.u);
+            ai.textContent = rnxFavIcon(f.n, f.t);
             var ac = document.createElement('a');
             ac.className = 'mdui-list-item-content mdui-text-truncate';
-            ac.setAttribute('href', href);
+            ac.setAttribute('href', f.u);
             ac.setAttribute('title', f.n);
             ac.textContent = f.n;
             li.appendChild(ai);
             li.appendChild(ac);
             list.appendChild(li);
           });
+        }
+        function rnxFavFetch() {
+          fetch('?action=get_fav', { headers: { 'x-requested-with': 'XMLHttpRequest' } }).then(function (r) {
+            if (r.status >= 400) return { fav: '' };
+            return r.json();
+          }).then(function (j) {
+            var arr = [];
+            if (j && typeof j.fav === 'string' && j.fav !== '') {
+              try { arr = JSON.parse(j.fav); } catch (e) { arr = []; }
+            }
+            if (!Array.isArray(arr)) arr = [];
+            rnxFavList = arr.filter(function (f) { return f && f.n && f.u && (f.t === 'file' || f.t === 'folder'); });
+            rnxFavRender();
+          }).catch(function () { rnxFavRender(); });
+        }
+        function rnxFavSaveServer(done) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', '');
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+          xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+          xhr.onload = function () {
+            done(xhr.status >= 200 && xhr.status < 300 ? null : (xhr.status + ': ' + xhr.responseText));
+          };
+          xhr.onerror = function () { done('网络错误'); };
+          xhr.send('action=save_fav&fav=' + encodeURIComponent(JSON.stringify(rnxFavList)));
+        }
+        function rnxToggleFav(item) {
+          if (!item || !item.name) return;
+          var u = item.u || rnxFavUrlOf(item);
+          var idx = -1;
+          rnxFavList.forEach(function (f, i) { if (f.u === u) idx = i; });
+          var added = false;
+          if (idx > -1) { rnxFavList.splice(idx, 1); } else { rnxFavList.push({ n: item.name, u: u, t: item.type, i: item.id || '' }); added = true; }
+          rnxFavRender();
+          rnxFavSaveServer(function (err) {
+            if (err) new mdui.Snackbar({ message: '收藏保存失败：' + err }).show();
+            else new mdui.Snackbar({ message: added ? '已收藏' : '已取消收藏' }).show();
+          });
+        }
+        function rnxFavCtxRow(e) {
+          var t = e.target;
+          var li = t.closest ? t.closest('#rnx_fav_list .rnx_fav_item') : null;
+          if (!li) return null;
+          var idx = parseInt(li.getAttribute('data-fav-idx') || '-1', 10);
+          var f = rnxFavList[idx];
+          if (!f) return null;
+          return { name: f.n, id: f.i || '', url: f.u, type: f.t, u: f.u, fav: f, isFav: true };
+        }
+        function rnxFavFileOp(fav, act) {
+          if (!fav || !fav.u) return;
+          var name = rnxFavBaseName(fav.u);
+          if (document.getElementById('file-list') && rnxFavDirOf(fav) === rnxCurDir()) {
+            var item = { name: name, id: fav.i || '', url: fav.u, type: fav.t };
+            if (act == 'delete') rnxOpenDel([item]);
+            else if (act == 'move') rnxOpenMov([item]);
+            else if (act == 'copy') rnxOpenCpy([item]);
+            else if (act == 'rename') rnxOpenRen(item);
+            return;
+          }
+          try { sessionStorage.setItem('rnx_fav_pending', JSON.stringify({ act: act, name: name })); } catch (e) {}
+          window.location.href = rnxFavDirOf(fav);
+        }
+        function rnxFavPendingRun() {
+          var raw = null;
+          try { raw = sessionStorage.getItem('rnx_fav_pending'); sessionStorage.removeItem('rnx_fav_pending'); } catch (e) {}
+          if (!raw) return;
+          var p = null;
+          try { p = JSON.parse(raw); } catch (e) {}
+          if (!p || !p.name || !p.act) return;
+          var ck = null;
+          document.querySelectorAll('#file-list .rnx_ck').forEach(function (el) {
+            if (el.getAttribute('data-name') === p.name) ck = el;
+          });
+          if (!ck) {
+            new mdui.Snackbar({ message: '未找到「' + p.name + '」，可能已被移动或删除' }).show();
+            return;
+          }
+          var item = { name: ck.getAttribute('data-name'), id: ck.getAttribute('data-id'), url: ck.getAttribute('data-url'), type: ck.getAttribute('data-type') };
+          if (p.act == 'delete') rnxOpenDel([item]);
+          else if (p.act == 'move') rnxOpenMov([item]);
+          else if (p.act == 'copy') rnxOpenCpy([item]);
+          else if (p.act == 'rename') rnxOpenRen(item);
         }
         function rnxOpenDel(items) {
           rnxDelItems = items;
@@ -810,7 +925,7 @@
         if (!window.rnxDocBound) {
           window.rnxDocBound = true;
           document.addEventListener('contextmenu', function (e) {
-            rnxCtxItem = rnxCtxRow(e);
+            rnxCtxItem = rnxCtxRow(e) || rnxFavCtxRow(e);
             document.querySelectorAll('#admin-menu .rnx_ctx_li').forEach(function (el) {
               el.style.display = rnxCtxItem ? '' : 'none';
             });
@@ -824,11 +939,19 @@
             var it = e.target.closest ? e.target.closest('#admin-menu .rnx_ctx_item') : null;
             if (!it || !rnxCtxItem) return;
             var act = it.getAttribute('data-act');
-            if (act == 'delete') rnxOpenDel([rnxCtxItem]);
-            else if (act == 'move') rnxOpenMov([rnxCtxItem]);
-            else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
-            else if (act == 'rename') rnxOpenRen(rnxCtxItem);
-            else if (act == 'fav') rnxToggleFav(rnxCtxItem);
+            if (rnxCtxItem.isFav) {
+              if (act == 'delete') rnxFavFileOp(rnxCtxItem.fav, 'delete');
+              else if (act == 'move') rnxFavFileOp(rnxCtxItem.fav, 'move');
+              else if (act == 'copy') rnxFavFileOp(rnxCtxItem.fav, 'copy');
+              else if (act == 'rename') rnxFavFileOp(rnxCtxItem.fav, 'rename');
+              else if (act == 'fav') rnxToggleFav(rnxCtxItem);
+            } else {
+              if (act == 'delete') rnxOpenDel([rnxCtxItem]);
+              else if (act == 'move') rnxOpenMov([rnxCtxItem]);
+              else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
+              else if (act == 'rename') rnxOpenRen(rnxCtxItem);
+              else if (act == 'fav') rnxToggleFav(rnxCtxItem);
+            }
           }, true);
           document.addEventListener('click', function (e) {
             var t = e.target;
@@ -941,8 +1064,9 @@
           rnxWatermark();
           var newEntry = document.getElementById('rnx_new_entry');
           if (newEntry) newEntry.style.display = document.getElementById('file-list') ? '' : 'none';
-          rnxFavRender();
+          rnxFavFetch();
           rnxBarStickUpdate();
+          setTimeout(rnxFavPendingRun, 250);
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', rnxInitDom);
@@ -1054,7 +1178,7 @@
           var bar = document.getElementById('rnx_admbar');
           if (!bar) return;
           var hd = document.querySelector('.mdui-appbar-fixed');
-          var top = hd ? hd.offsetHeight : 64;
+          var top = (hd ? hd.offsetHeight : 64) + 4;
           bar.classList.toggle('rnx-stuck', bar.getBoundingClientRect().top <= top + 0.5);
         }
         if (!window.rnxBarStickBound) {
@@ -1067,6 +1191,14 @@
           document.addEventListener('click', function (e) {
             if (e.target && e.target.closest && e.target.closest('#rnx_fav_list a')) {
               document.body.classList.remove('mdui-drawer-body-left');
+              var d = document.getElementById('main-drawer');
+              if (d) {
+                d.classList.remove('mdui-drawer-open');
+                d.classList.add('mdui-drawer-close');
+              }
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
             }
           }, true);
         }
@@ -1130,7 +1262,7 @@
       <!--GuestUpStart-->
       <div id="rnx_fav_area" style="display:none">
         <div class="mdui-divider"></div>
-        <ul id="rnx_fav_list" style="margin:0;padding:0;list-style:none"></ul>
+        <ul id="rnx_fav_list" style="margin:0;padding:12px 0;list-style:none"></ul>
         <div class="mdui-divider"></div>
       </div>
       <!--GuestUpEnd-->
