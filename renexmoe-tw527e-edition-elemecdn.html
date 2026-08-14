@@ -199,18 +199,17 @@
     }
 
     .rnx-ver {
-      padding: 14px 20px;
-      font-size: 12px;
-      line-height: 1.9;
-      color: rgba(255, 255, 255, 0.55);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      user-select: text;
-    }
-    .rnx-ver a {
-      color: rgba(255, 255, 255, 0.75);
+      position: fixed;
+      left: 14px;
+      bottom: 12px;
+      z-index: 950;
+      font-size: 11px;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      user-select: none;
     }
     .rnx-ver .rnx-ver-code {
-      color: rgba(255, 255, 255, 0.75);
       font-family: Consolas, monospace;
       margin-left: 4px;
     }
@@ -376,514 +375,591 @@
 
 <body>
   <div class="blur"></div>
-<!--GuestUpStart-->
-    <div class="mdui-dialog" id="rnx_del_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">delete</i>&nbsp;删除</div>
-      <div class="mdui-dialog-content" id="rnx_del_content"></div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
-        <button class="mdui-btn mdui-ripple" id="rnx_del_ok">删除</button>
-      </div>
-    </div>
-
-    <div class="mdui-dialog rnx-browser" id="rnx_cpy_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">content_copy</i>&nbsp;复制到</div>
-      <div class="mdui-dialog-content">
-        <div class="rnx-browser-bar">
-          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_cpy_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
-          <input type="text" class="rnx-browser-path" id="rnx_cpy_path" placeholder="/" spellcheck="false">
-        </div>
-        <div class="rnx-browser-list" id="rnx_cpy_list"></div>
-      </div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
-        <button class="mdui-btn mdui-ripple" id="rnx_cpy_ok">复制</button>
-      </div>
-    </div>
-
-    <div class="mdui-dialog" id="rnx_ren_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">edit</i>&nbsp;重命名</div>
-      <div class="mdui-dialog-content">
-        <div class="mdui-textfield">
-          <input class="mdui-textfield-input" id="rnx_ren_input" type="text">
-        </div>
-      </div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
-        <button class="mdui-btn mdui-ripple" id="rnx_ren_ok">重命名</button>
-      </div>
-    </div>
-
-    <div class="mdui-dialog rnx-browser" id="rnx_mov_dialog">
-      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">swap_horiz</i>&nbsp;移动到</div>
-      <div class="mdui-dialog-content">
-        <div class="rnx-browser-bar">
-          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_mov_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
-          <input type="text" class="rnx-browser-path" id="rnx_mov_path" placeholder="/" spellcheck="false">
-        </div>
-        <div class="rnx-browser-list" id="rnx_mov_list"></div>
-      </div>
-      <div class="mdui-dialog-actions">
-        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
-        <button class="mdui-btn mdui-ripple" id="rnx_mov_ok">移动</button>
-      </div>
-    </div>
-
-    <script>
-      (function () {
-        var rnxCtxItem = null;
-        var rnxDelItems = [];
-        var rnxCpyItems = [];
-        var rnxMovItems = [];
-        var rnxRenItem = null;
-        function rnxCtxRow(e) {
-          var t = e.target;
-          var li = t.closest ? t.closest('#file-list li') : null;
-          if (!li) return null;
-          var ck = li.querySelector('.rnx_ck');
-          if (!ck) return null;
-          return { name: ck.getAttribute('data-name'), id: ck.getAttribute('data-id'), url: ck.getAttribute('data-url'), type: ck.getAttribute('data-type') };
-        }
-        function rnxAdmSel() {
-          var items = [];
-          document.querySelectorAll('#file-list .rnx_ck:checked').forEach(function (el) {
-            items.push({ name: el.getAttribute('data-name'), id: el.getAttribute('data-id'), url: el.getAttribute('data-url'), type: el.getAttribute('data-type') });
-          });
-          return items;
-        }
-        function rnxAdmBarUpdate() {
-          var cks = document.querySelectorAll('#file-list .rnx_ck');
-          var n = document.querySelectorAll('#file-list .rnx_ck:checked').length;
-          var cnt = document.getElementById('rnx_adm_count');
-          if (cnt) cnt.textContent = n;
-          var all = document.getElementById('rnx_ck_all');
-          if (all) all.checked = cks.length > 0 && n === cks.length;
-          function b(id, dis) { var el = document.getElementById(id); if (el) el.disabled = dis; }
-          b('rnx_bar_download', n < 1);
-          b('rnx_bar_delete', n < 1);
-          b('rnx_bar_move', n < 1);
-          b('rnx_bar_rename', n !== 1);
-          b('rnx_bar_link', n < 1);
-        }
-        function rnxAdmPost(params, done) {
-          var xhr = new XMLHttpRequest();
-          xhr.open('POST', '');
-          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
-          xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
-          xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) done(null);
-            else done(xhr.status + ': ' + xhr.responseText);
-          };
-          xhr.onerror = function () { done('网络错误'); };
-          xhr.send(params + '&_admin=' + encodeURIComponent(localStorage.getItem('admin') || ''));
-        }
-        function rnxAdmSeq(items, mkParams, title, done) {
-          var i = 0;
-          function next() {
-            if (i >= items.length) { done(); return; }
-            var it = items[i];
-            rnxAdmPost(mkParams(it), function (err) {
-              if (err) { mdui.alert(err, title); return; }
-              i++;
-              next();
-            });
-          }
-          next();
-        }
-        var rnxDlgCache = {};
-        function rnxDialog(id) {
-          var el = document.getElementById(id);
-          if (!el) return null;
-          var inst = rnxDlgCache[id];
-          if (!inst || inst.$element[0] !== el) {
-            inst = new mdui.Dialog(el, { history: false });
-            rnxDlgCache[id] = inst;
-            try {
-              if (!mdui.$(el).data('_mdui_dialog')) mdui.$(el).data('_mdui_dialog', inst);
-            } catch (e) {}
-          }
-          return inst;
-        }
-        function rnxRealInst(el) {
-          try {
-            if (window.mdui && mdui.$(el) && mdui.$(el).data) {
-              var inst = mdui.$(el).data('_mdui_dialog');
-              if (inst && inst.close) return inst;
-            }
-          } catch (e) {}
-          return null;
-        }
-        function rnxForceClose(el) {
-          el.classList.remove('mdui-dialog-open');
-          el.style.display = 'none';
-        }
-        function rnxOpenDialog(id) {
-          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
-            if (el.id == id) return;
-            var inst = rnxRealInst(el);
-            if (inst) inst.close();
-            else rnxForceClose(el);
-          });
-          var d = rnxDialog(id);
-          if (d) d.open();
-        }
-        function rnxCloseAllOpen() {
-          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
-            var inst = rnxRealInst(el);
-            if (inst) inst.close();
-            else rnxForceClose(el);
-          });
-          document.querySelectorAll('.mdui-dialog').forEach(function (el) {
-            if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
-              el.style.display = 'none';
-            }
-          });
-          document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-            o.classList.remove('mdui-overlay-show');
-          });
-        }
-        function rnxCloseDialog(id) {
-          var d = rnxDialog(id);
-          if (d) d.close();
-          setTimeout(function () {
-            if (!document.querySelector('.mdui-dialog-open')) {
-              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-                o.classList.remove('mdui-overlay-show');
-              });
-            }
-          }, 400);
-        }
-        function rnxBind(id, fn) {
-          document.addEventListener('click', function (e) {
-            if (e.target && e.target.closest && e.target.closest('#' + id)) fn.call(e.target, e);
-          });
-        }
-        function rnxCopyText(t) {
-          function fallback() {
-            var ta = document.createElement('textarea');
-            ta.value = t;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            document.body.removeChild(ta);
-          }
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(t).then(function () {
-              new mdui.Snackbar({ message: '已复制链接' }).show();
-            }).catch(fallback);
-          } else fallback();
-        }
-        function rnxOpenDel(items) {
-          rnxDelItems = items;
-          document.getElementById('rnx_del_content').textContent = '是否确认要删除「' + items.map(function (x) { return x.name; }).join('、') + '」？';
-          rnxOpenDialog('rnx_del_dialog');
-        }
-        function rnxOpenCpy(items) {
-          rnxBrowseOpen('cpy', items);
-        }
-        function rnxOpenRen(item) {
-          rnxRenItem = item;
-          document.getElementById('rnx_ren_input').value = item.name;
-          rnxOpenDialog('rnx_ren_dialog');
-        }
-        function rnxOpenMov(items) {
-          rnxBrowseOpen('mov', items);
-        }
-        var rnxBrowse = { mode: '', path: '/', stack: [], target: [] };
-        function rnxBrowsePathClean(p) {
-          if (p == '' || p == '/') return '/';
-          while (p.indexOf('//') > -1) p = p.replace('//', '/');
-          if (p.slice(-1) == '/') p = p.slice(0, -1);
-          return p;
-        }
-        function rnxBrowseLoad() {
-          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
-          var pathEl = document.getElementById('rnx_' + box + '_path');
-          var listEl = document.getElementById('rnx_' + box + '_list');
-          var upBtn = document.getElementById('rnx_' + box + '_up');
-          if (pathEl) pathEl.value = rnxBrowse.path;
-          if (upBtn) upBtn.disabled = rnxBrowse.path == '/';
-          if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px">加载中...</div>';
-          var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path.split('/').map(encodeURIComponent).join('/') + '/') + '?json=1';
-          fetch(url, { headers: { 'x-requested-with': 'XMLHttpRequest' } }).then(function (r) {
-            return r.json();
-          }).then(function (j) {
-            if (!listEl) return;
-            if (!j || j.type != 'folder') { listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">无法打开该文件夹</div>'; return; }
-            var folders = [];
-            var list = j.list || {};
-            Object.keys(list).forEach(function (k) {
-              var it = list[k];
-              if (it && it.type == 'folder') folders.push(it.name || k);
-            });
-            folders.sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); });
-            listEl.innerHTML = '';
-            if (folders.length == 0) {
-              listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:24px">此文件夹没有子目录</div>';
-              return;
-            }
-            folders.forEach(function (name) {
-              var row = document.createElement('div');
-              row.className = 'rnx-browser-item';
-              row.innerHTML = '<i class="mdui-icon material-icons">folder_open</i><span class="rnx-browser-name"></span>'
-                + '<span class="rnx-browser-spacer"></span><span class="rnx-browser-open">打开</span>';
-              row.querySelector('.rnx-browser-name').textContent = name;
-              row.addEventListener('click', function () {
-                rnxBrowse.stack.push(rnxBrowse.path);
-                rnxBrowse.path = rnxBrowsePathClean(rnxBrowse.path + '/' + name);
-                rnxBrowseLoad();
-              });
-              listEl.appendChild(row);
-            });
-          }).catch(function () {
-            if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">加载失败</div>';
-          });
-        }
-        function rnxBrowseUp() {
-          if (rnxBrowse.stack.length == 0) return;
-          rnxBrowse.path = rnxBrowse.stack.pop();
-          rnxBrowseLoad();
-        }
-        function rnxBrowseGoTo() {
-          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
-          var input = document.getElementById('rnx_' + box + '_path');
-          if (!input) return;
-          var p = input.value.trim();
-          if (p == '') return;
-          if (p.slice(0, 1) != '/') p = '/' + p;
-          p = rnxBrowsePathClean(p);
-          rnxBrowse.stack = [];
-          rnxBrowse.path = p;
-          rnxBrowseLoad();
-        }
-        function rnxBrowseOpen(mode, items) {
-          rnxBrowse.mode = mode;
-          rnxBrowse.target = items;
-          var p = window.location.pathname;
-          try { p = decodeURIComponent(p); } catch (e) {}
-          rnxBrowse.path = rnxBrowsePathClean(p);
-          rnxBrowse.stack = [];
-          rnxBrowseLoad();
-          rnxOpenDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
-        }
-        function rnxBrowseConfirm() {
-          var mode = rnxBrowse.mode;
-          var target = rnxBrowsePathClean(rnxBrowse.path);
-          var title = mode == 'mov' ? '移动' : '复制';
-          rnxCloseDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
-          rnxAdmSeq(rnxBrowse.target, function (it) {
-            if (mode == 'mov') {
-              return 'move_name=' + encodeURIComponent(it.name) + '&move_folder=' + encodeURIComponent(target) + '&move_fileid=' + encodeURIComponent(it.id || '');
-            }
-            return 'copy_name=' + encodeURIComponent(it.name) + '&copy_folder=' + encodeURIComponent(target) + '&copy_fileid=' + encodeURIComponent(it.id || '');
-          }, title, function () { location.reload(); });
-        }
-        if (!window.rnxDocBound) {
-          window.rnxDocBound = true;
-          document.addEventListener('contextmenu', function (e) {
-            rnxCtxItem = rnxCtxRow(e);
-            document.querySelectorAll('#admin-menu .rnx_ctx_li').forEach(function (el) {
-              el.style.display = rnxCtxItem ? '' : 'none';
-            });
-          });
-          document.addEventListener('click', function (e) {
-            var it = e.target.closest ? e.target.closest('#admin-menu .rnx_ctx_item') : null;
-            if (!it || !rnxCtxItem) return;
-            var act = it.getAttribute('data-act');
-            if (act == 'delete') rnxOpenDel([rnxCtxItem]);
-            else if (act == 'move') rnxOpenMov([rnxCtxItem]);
-            else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
-            else if (act == 'rename') rnxOpenRen(rnxCtxItem);
-          }, true);
-          document.addEventListener('click', function (e) {
-            var t = e.target;
-            if (!t || !t.closest) return;
-            if (t.closest('.rnx_ck') || t.closest('.forcedownload') || t.closest('#file-list li > a')) return;
-            var li = t.closest('#file-list li');
-            if (!li) return;
-            var a = li.querySelector(':scope > a');
-            if (a && a.getAttribute('href')) {
-              e.preventDefault();
-              a.click();
-            }
-          });
-          document.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter' || e.isComposing) return;
-            var t = e.target;
-            if (t && (t.id === 'rnx_mov_path' || t.id === 'rnx_cpy_path')) {
-              e.preventDefault();
-              rnxBrowseGoTo();
-            }
-          });
-          document.addEventListener('click', function (e) {
-            if (!e.target || e.target.id !== 'rnx_ck_all') return;
-            var all = document.querySelectorAll('#file-list .rnx_ck');
-            var checked = document.querySelectorAll('#file-list .rnx_ck:checked').length;
-            var doCheck = checked === 0;
-            all.forEach(function (el) { el.checked = doCheck; });
-            rnxAdmBarUpdate();
-          });
-          document.addEventListener('click', function (e) {
-            if (e.target.closest && e.target.closest('.getalllink')) {
-              e.preventDefault();
-              e.stopPropagation();
-              rnxGetAllLinks();
-            }
-          }, true);
-          document.addEventListener('click', function (e) {
-            if (e.target && e.target.closest && e.target.closest('.mdui-dialog-open')) return;
-            setTimeout(function () {
-              if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
-                document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-                  o.classList.remove('mdui-overlay-show');
-                });
-              }
-            }, 350);
-          }, true);
-          document.addEventListener('click', function (e) {
-            if (e.target.closest && e.target.closest('[mdui-dialog]')) {
-              setTimeout(function () {
-                document.querySelectorAll('#rnx_del_dialog,#rnx_ren_dialog,#rnx_cpy_dialog,#rnx_mov_dialog').forEach(function (el) {
-                  if (el.classList.contains('mdui-dialog-open')) {
-                    var d = rnxDialog(el.id);
-                    if (d && d.close) d.close();
-                  }
-                });
-              }, 60);
-            }
-          }, true);
-          document.addEventListener('pjax:success', function () {
-            setTimeout(rnxCloseAllOpen, 50);
-          });
-          setInterval(function () {
-            document.querySelectorAll('.mdui-dialog').forEach(function (el) {
-              if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
-                el.style.display = 'none';
-              }
-            });
-            if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
-              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
-                o.classList.remove('mdui-overlay-show');
-              });
-            }
-          }, 1500);
-        }
-        function rnxWatermark() {
-          var thVer = document.getElementById('rnx_theme_ver');
-          if (thVer) {
-            var thText = thVer.textContent;
-            if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
-            else if (thText.indexOf('@') > -1) {
-              var thM = thText.match(/@([^\/]+)\//);
-              thVer.textContent = thM ? thM[1] : '—';
-            }
-          }
-          var omVer = document.getElementById('rnx_om_ver');
-          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
-        }
-        function rnxInjectMenu() {
-          var menu = document.getElementById('admin-menu');
-          if (!menu || menu.getAttribute('data-rnx-items')) return;
-          menu.setAttribute('data-rnx-items', '1');
-          var defs = [
-            { act: 'delete', icon: 'delete', text: '删除' },
-            { act: 'move', icon: 'swap_horiz', text: '移动到' },
-            { act: 'copy', icon: 'content_copy', text: '复制到' },
-            { act: 'rename', icon: 'edit', text: '重命名' }
-          ];
-          defs.forEach(function (d) {
-            var li = document.createElement('li');
-            li.className = 'mdui-menu-item rnx_ctx_li';
-            li.innerHTML = '<a class="mdui-ripple rnx_ctx_item" data-act="' + d.act + '">'
-              + '<i class="mdui-menu-item-icon mdui-icon material-icons">' + d.icon + '</i>' + d.text + '</a>';
-            menu.appendChild(li);
-          });
-        }
-        function rnxInitDom() {
-          rnxInjectMenu();
-          rnxAdmBarUpdate();
-          rnxWatermark();
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', rnxInitDom);
-        } else {
-          rnxInitDom();
-        }
-        document.addEventListener('pjax:success', rnxInitDom);
-        function rnxGetAllLinks() {
-          rnxCloseAllOpen();
-          var urls = [];
-          document.querySelectorAll('#file-list li .forcedownload a').forEach(function (a) {
-            var h = a.getAttribute('href');
-            if (h) urls.push(new URL(h, location.href).href);
-          });
-          var esc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
-          mdui.dialog({
-            title: '全部链接',
-            content: urls.length > 0
-              ? '<div class="mdui-textfield"><textarea class="mdui-textfield-input" readonly rows="8" style="width:100%;resize:vertical">' + esc(urls.join('\n')) + '</textarea></div>'
-              : '<div class="mdui-typo">当前目录没有可复制的文件链接</div>',
-            buttons: [
-              { text: '复制', onClick: function () { rnxCopyText(urls.join('\n')); } },
-              { text: '确定', onClick: function () {} }
-            ]
-          });
-        }
-        rnxBind('rnx_del_ok', function () {
-          rnxCloseDialog('rnx_del_dialog');
-          rnxAdmSeq(rnxDelItems, function (it) {
-            return 'delete_name=' + encodeURIComponent(it.name) + '&delete_fileid=' + encodeURIComponent(it.id || '');
-          }, '删除', function () { location.reload(); });
-        });
-        rnxBind('rnx_cpy_ok', rnxBrowseConfirm);
-        rnxBind('rnx_cpy_up', rnxBrowseUp);
-        rnxBind('rnx_ren_ok', function () {
-          var nv = document.getElementById('rnx_ren_input').value.trim();
-          if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
-          rnxCloseDialog('rnx_ren_dialog');
-          rnxAdmPost('rename_oldname=' + encodeURIComponent(rnxRenItem.name)
-            + '&rename_newname=' + encodeURIComponent(nv)
-            + '&rename_fileid=' + encodeURIComponent(rnxRenItem.id || ''), function (err) {
-            if (err) { mdui.alert(err, '重命名'); return; }
-            location.reload();
-          });
-        });
-        rnxBind('rnx_mov_ok', rnxBrowseConfirm);
-        rnxBind('rnx_mov_up', rnxBrowseUp);
-        rnxBind('rnx_bar_download', function () {
-          var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
-          if (items.length < 1) { mdui.alert('仅文件可下载'); return; }
-          items.forEach(function (it, idx) {
-            setTimeout(function () {
-              var a = document.createElement('a');
-              a.href = new URL(it.url, location.href).href;
-              a.download = '';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            }, idx * 250);
-          });
-        });
-        rnxBind('rnx_bar_delete', function () { rnxOpenDel(rnxAdmSel()); });
-        rnxBind('rnx_bar_move', function () { rnxOpenMov(rnxAdmSel()); });
-        rnxBind('rnx_bar_rename', function () {
-          var s = rnxAdmSel();
-          if (s.length != 1) { mdui.alert('请只选择一个文件'); return; }
-          rnxOpenRen(s[0]);
-        });
-        rnxBind('rnx_bar_link', function () {
-          var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
-          if (items.length < 1) { mdui.alert('仅文件可获取链接'); return; }
-          rnxCopyText(items.map(function (it) { return new URL(it.url, location.href).href; }).join('\n'));
-        });
-        document.addEventListener('change', function (e) {
-          if (e.target && e.target.classList && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
-        });
-        rnxAdmBarUpdate();
-      })();
-    </script>
+<!--GuestUpStart-->
+    <div class="mdui-dialog" id="rnx_del_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">delete</i>&nbsp;删除</div>
+      <div class="mdui-dialog-content" id="rnx_del_content"></div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_del_ok">删除</button>
+      </div>
+    </div>
+
+    <div class="mdui-dialog rnx-browser" id="rnx_cpy_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">content_copy</i>&nbsp;复制到</div>
+      <div class="mdui-dialog-content">
+        <div class="rnx-browser-bar">
+          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_cpy_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
+          <input type="text" class="rnx-browser-path" id="rnx_cpy_path" placeholder="/" spellcheck="false">
+        </div>
+        <div class="rnx-browser-list" id="rnx_cpy_list"></div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_cpy_ok">复制</button>
+      </div>
+    </div>
+
+    <div class="mdui-dialog" id="rnx_ren_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">edit</i>&nbsp;重命名</div>
+      <div class="mdui-dialog-content">
+        <div class="mdui-textfield">
+          <input class="mdui-textfield-input" id="rnx_ren_input" type="text">
+        </div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_ren_ok">重命名</button>
+      </div>
+    </div>
+
+    <div class="mdui-dialog rnx-browser" id="rnx_mov_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">swap_horiz</i>&nbsp;移动到</div>
+      <div class="mdui-dialog-content">
+        <div class="rnx-browser-bar">
+          <button class="mdui-btn mdui-btn-icon mdui-ripple" id="rnx_mov_up" title="上一级"><i class="mdui-icon material-icons">arrow_upward</i></button>
+          <input type="text" class="rnx-browser-path" id="rnx_mov_path" placeholder="/" spellcheck="false">
+        </div>
+        <div class="rnx-browser-list" id="rnx_mov_list"></div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_mov_ok">移动</button>
+      </div>
+    </div>
+
+    <div class="mdui-dialog" id="rnx_new_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">create_new_folder</i>&nbsp;新建</div>
+      <div class="mdui-dialog-content">
+        <div class="mdui-textfield mdui-textfield-floating-label">
+          <i class="mdui-icon material-icons">edit</i>
+          <label class="mdui-textfield-label">名称</label>
+          <input class="mdui-textfield-input" id="rnx_new_name" type="text" maxlength="255" autocomplete="off">
+        </div>
+        <div style="padding: 6px 0 4px 0">
+          <label class="mdui-radio">
+            <input type="radio" name="rnx_new_type" value="folder" checked>
+            <i class="mdui-radio-icon"></i>新建文件夹
+          </label>
+          <label class="mdui-radio" style="margin-left: 24px">
+            <input type="radio" name="rnx_new_type" value="file">
+            <i class="mdui-radio-icon"></i>新建文件
+          </label>
+        </div>
+        <div id="rnx_new_content_wrap" style="display:none">
+          <div class="mdui-textfield mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">notes</i>
+            <label class="mdui-textfield-label">文件内容（可选）</label>
+            <textarea class="mdui-textfield-input" id="rnx_new_content" rows="5"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_new_ok">新建</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var rnxCtxItem = null;
+        var rnxDelItems = [];
+        var rnxCpyItems = [];
+        var rnxMovItems = [];
+        var rnxRenItem = null;
+        function rnxCtxRow(e) {
+          var t = e.target;
+          var li = t.closest ? t.closest('#file-list li') : null;
+          if (!li) return null;
+          var ck = li.querySelector('.rnx_ck');
+          if (!ck) return null;
+          return { name: ck.getAttribute('data-name'), id: ck.getAttribute('data-id'), url: ck.getAttribute('data-url'), type: ck.getAttribute('data-type') };
+        }
+        function rnxAdmSel() {
+          var items = [];
+          document.querySelectorAll('#file-list .rnx_ck:checked').forEach(function (el) {
+            items.push({ name: el.getAttribute('data-name'), id: el.getAttribute('data-id'), url: el.getAttribute('data-url'), type: el.getAttribute('data-type') });
+          });
+          return items;
+        }
+        function rnxAdmBarUpdate() {
+          var cks = document.querySelectorAll('#file-list .rnx_ck');
+          var n = document.querySelectorAll('#file-list .rnx_ck:checked').length;
+          var cnt = document.getElementById('rnx_adm_count');
+          if (cnt) cnt.textContent = n;
+          var all = document.getElementById('rnx_ck_all');
+          if (all) all.checked = cks.length > 0 && n === cks.length;
+          function b(id, dis) { var el = document.getElementById(id); if (el) el.disabled = dis; }
+          b('rnx_bar_download', n < 1);
+          b('rnx_bar_delete', n < 1);
+          b('rnx_bar_move', n < 1);
+          b('rnx_bar_rename', n !== 1);
+          b('rnx_bar_link', n < 1);
+        }
+        function rnxAdmPost(params, done) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', '');
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+          xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) done(null);
+            else done(xhr.status + ': ' + xhr.responseText);
+          };
+          xhr.onerror = function () { done('网络错误'); };
+          xhr.send(params + '&_admin=' + encodeURIComponent(localStorage.getItem('admin') || ''));
+        }
+        function rnxAdmSeq(items, mkParams, title, done) {
+          var i = 0;
+          function next() {
+            if (i >= items.length) { done(); return; }
+            var it = items[i];
+            rnxAdmPost(mkParams(it), function (err) {
+              if (err) { mdui.alert(err, title); return; }
+              i++;
+              next();
+            });
+          }
+          next();
+        }
+        var rnxDlgCache = {};
+        function rnxDialog(id) {
+          var el = document.getElementById(id);
+          if (!el) return null;
+          var inst = rnxDlgCache[id];
+          if (!inst || inst.$element[0] !== el) {
+            inst = new mdui.Dialog(el, { history: false });
+            rnxDlgCache[id] = inst;
+            try {
+              if (!mdui.$(el).data('_mdui_dialog')) mdui.$(el).data('_mdui_dialog', inst);
+            } catch (e) {}
+          }
+          return inst;
+        }
+        function rnxRealInst(el) {
+          try {
+            if (window.mdui && mdui.$(el) && mdui.$(el).data) {
+              var inst = mdui.$(el).data('_mdui_dialog');
+              if (inst && inst.close) return inst;
+            }
+          } catch (e) {}
+          return null;
+        }
+        function rnxForceClose(el) {
+          el.classList.remove('mdui-dialog-open');
+          el.style.display = 'none';
+        }
+        function rnxOpenDialog(id) {
+          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
+            if (el.id == id) return;
+            var inst = rnxRealInst(el);
+            if (inst) inst.close();
+            else rnxForceClose(el);
+          });
+          var d = rnxDialog(id);
+          if (d) d.open();
+        }
+        function rnxCloseAllOpen() {
+          document.querySelectorAll('.mdui-dialog-open').forEach(function (el) {
+            var inst = rnxRealInst(el);
+            if (inst) inst.close();
+            else rnxForceClose(el);
+          });
+          document.querySelectorAll('.mdui-dialog').forEach(function (el) {
+            if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
+              el.style.display = 'none';
+            }
+          });
+          document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+            o.classList.remove('mdui-overlay-show');
+          });
+        }
+        function rnxCloseDialog(id) {
+          var d = rnxDialog(id);
+          if (d) d.close();
+          setTimeout(function () {
+            if (!document.querySelector('.mdui-dialog-open')) {
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
+            }
+          }, 400);
+        }
+        function rnxBind(id, fn) {
+          document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('#' + id)) fn.call(e.target, e);
+          });
+        }
+        function rnxCopyText(t) {
+          function fallback() {
+            var ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(function () {
+              new mdui.Snackbar({ message: '已复制链接' }).show();
+            }).catch(fallback);
+          } else fallback();
+        }
+        function rnxOpenDel(items) {
+          rnxDelItems = items;
+          document.getElementById('rnx_del_content').textContent = '是否确认要删除「' + items.map(function (x) { return x.name; }).join('、') + '」？';
+          rnxOpenDialog('rnx_del_dialog');
+        }
+        function rnxOpenCpy(items) {
+          rnxBrowseOpen('cpy', items);
+        }
+        function rnxOpenRen(item) {
+          rnxRenItem = item;
+          document.getElementById('rnx_ren_input').value = item.name;
+          rnxOpenDialog('rnx_ren_dialog');
+        }
+        function rnxOpenMov(items) {
+          rnxBrowseOpen('mov', items);
+        }
+        function rnxOpenNew() {
+          var nameEl = document.getElementById('rnx_new_name');
+          if (nameEl) nameEl.value = '';
+          var contentEl = document.getElementById('rnx_new_content');
+          if (contentEl) contentEl.value = '';
+          var folderRadio = document.querySelector('#rnx_new_dialog input[value="folder"]');
+          var fileRadio = document.querySelector('#rnx_new_dialog input[value="file"]');
+          if (folderRadio) folderRadio.checked = true;
+          if (fileRadio) fileRadio.checked = false;
+          var wrap = document.getElementById('rnx_new_content_wrap');
+          if (wrap) wrap.style.display = 'none';
+          rnxOpenDialog('rnx_new_dialog');
+        }
+        var rnxBrowse = { mode: '', path: '/', stack: [], target: [] };
+        function rnxBrowsePathClean(p) {
+          if (p == '' || p == '/') return '/';
+          while (p.indexOf('//') > -1) p = p.replace('//', '/');
+          if (p.slice(-1) == '/') p = p.slice(0, -1);
+          return p;
+        }
+        function rnxBrowseLoad() {
+          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
+          var pathEl = document.getElementById('rnx_' + box + '_path');
+          var listEl = document.getElementById('rnx_' + box + '_list');
+          var upBtn = document.getElementById('rnx_' + box + '_up');
+          if (pathEl) pathEl.value = rnxBrowse.path;
+          if (upBtn) upBtn.disabled = rnxBrowse.path == '/';
+          if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px">加载中...</div>';
+          var url = (rnxBrowse.path == '/' ? '/' : rnxBrowse.path.split('/').map(encodeURIComponent).join('/') + '/') + '?json=1';
+          fetch(url, { headers: { 'x-requested-with': 'XMLHttpRequest' } }).then(function (r) {
+            return r.json();
+          }).then(function (j) {
+            if (!listEl) return;
+            if (!j || j.type != 'folder') { listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">无法打开该文件夹</div>'; return; }
+            var folders = [];
+            var list = j.list || {};
+            Object.keys(list).forEach(function (k) {
+              var it = list[k];
+              if (it && it.type == 'folder') folders.push(it.name || k);
+            });
+            folders.sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); });
+            listEl.innerHTML = '';
+            if (folders.length == 0) {
+              listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:24px">此文件夹没有子目录</div>';
+              return;
+            }
+            folders.forEach(function (name) {
+              var row = document.createElement('div');
+              row.className = 'rnx-browser-item';
+              row.innerHTML = '<i class="mdui-icon material-icons">folder_open</i><span class="rnx-browser-name"></span>'
+                + '<span class="rnx-browser-spacer"></span><span class="rnx-browser-open">打开</span>';
+              row.querySelector('.rnx-browser-name').textContent = name;
+              row.addEventListener('click', function () {
+                rnxBrowse.stack.push(rnxBrowse.path);
+                rnxBrowse.path = rnxBrowsePathClean(rnxBrowse.path + '/' + name);
+                rnxBrowseLoad();
+              });
+              listEl.appendChild(row);
+            });
+          }).catch(function () {
+            if (listEl) listEl.innerHTML = '<div class="mdui-typo-caption mdui-text-center" style="padding:20px;color:#ff5252">加载失败</div>';
+          });
+        }
+        function rnxBrowseUp() {
+          if (rnxBrowse.stack.length == 0) return;
+          rnxBrowse.path = rnxBrowse.stack.pop();
+          rnxBrowseLoad();
+        }
+        function rnxBrowseGoTo() {
+          var box = rnxBrowse.mode == 'mov' ? 'mov' : 'cpy';
+          var input = document.getElementById('rnx_' + box + '_path');
+          if (!input) return;
+          var p = input.value.trim();
+          if (p == '') return;
+          if (p.slice(0, 1) != '/') p = '/' + p;
+          p = rnxBrowsePathClean(p);
+          rnxBrowse.stack = [];
+          rnxBrowse.path = p;
+          rnxBrowseLoad();
+        }
+        function rnxBrowseOpen(mode, items) {
+          rnxBrowse.mode = mode;
+          rnxBrowse.target = items;
+          var p = window.location.pathname;
+          try { p = decodeURIComponent(p); } catch (e) {}
+          rnxBrowse.path = rnxBrowsePathClean(p);
+          rnxBrowse.stack = [];
+          rnxBrowseLoad();
+          rnxOpenDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
+        }
+        function rnxBrowseConfirm() {
+          var mode = rnxBrowse.mode;
+          var target = rnxBrowsePathClean(rnxBrowse.path);
+          var title = mode == 'mov' ? '移动' : '复制';
+          rnxCloseDialog(mode == 'mov' ? 'rnx_mov_dialog' : 'rnx_cpy_dialog');
+          rnxAdmSeq(rnxBrowse.target, function (it) {
+            if (mode == 'mov') {
+              return 'move_name=' + encodeURIComponent(it.name) + '&move_folder=' + encodeURIComponent(target) + '&move_fileid=' + encodeURIComponent(it.id || '');
+            }
+            return 'copy_name=' + encodeURIComponent(it.name) + '&copy_folder=' + encodeURIComponent(target) + '&copy_fileid=' + encodeURIComponent(it.id || '');
+          }, title, function () { location.reload(); });
+        }
+        if (!window.rnxDocBound) {
+          window.rnxDocBound = true;
+          document.addEventListener('contextmenu', function (e) {
+            rnxCtxItem = rnxCtxRow(e);
+            document.querySelectorAll('#admin-menu .rnx_ctx_li').forEach(function (el) {
+              el.style.display = rnxCtxItem ? '' : 'none';
+            });
+          });
+          document.addEventListener('click', function (e) {
+            var it = e.target.closest ? e.target.closest('#admin-menu .rnx_ctx_item') : null;
+            if (!it || !rnxCtxItem) return;
+            var act = it.getAttribute('data-act');
+            if (act == 'delete') rnxOpenDel([rnxCtxItem]);
+            else if (act == 'move') rnxOpenMov([rnxCtxItem]);
+            else if (act == 'copy') rnxOpenCpy([rnxCtxItem]);
+            else if (act == 'rename') rnxOpenRen(rnxCtxItem);
+          }, true);
+          document.addEventListener('click', function (e) {
+            var t = e.target;
+            if (!t || !t.closest) return;
+            if (t.closest('.rnx_ck') || t.closest('.forcedownload') || t.closest('#file-list li > a')) return;
+            var li = t.closest('#file-list li');
+            if (!li) return;
+            var a = li.querySelector(':scope > a');
+            if (a && a.getAttribute('href')) {
+              e.preventDefault();
+              a.click();
+            }
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' || e.isComposing) return;
+            var t = e.target;
+            if (t && (t.id === 'rnx_mov_path' || t.id === 'rnx_cpy_path')) {
+              e.preventDefault();
+              rnxBrowseGoTo();
+            }
+          });
+          document.addEventListener('click', function (e) {
+            if (!e.target || e.target.id !== 'rnx_ck_all') return;
+            var all = document.querySelectorAll('#file-list .rnx_ck');
+            var checked = document.querySelectorAll('#file-list .rnx_ck:checked').length;
+            var doCheck = checked === 0;
+            all.forEach(function (el) { el.checked = doCheck; });
+            rnxAdmBarUpdate();
+          });
+          document.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('.getalllink')) {
+              e.preventDefault();
+              e.stopPropagation();
+              rnxGetAllLinks();
+            }
+          }, true);
+          document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && e.target.closest('.mdui-dialog-open')) return;
+            setTimeout(function () {
+              if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
+                document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                  o.classList.remove('mdui-overlay-show');
+                });
+              }
+            }, 350);
+          }, true);
+          document.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('[mdui-dialog]')) {
+              setTimeout(function () {
+                document.querySelectorAll('#rnx_del_dialog,#rnx_ren_dialog,#rnx_cpy_dialog,#rnx_mov_dialog,#rnx_new_dialog').forEach(function (el) {
+                  if (el.classList.contains('mdui-dialog-open')) {
+                    var d = rnxDialog(el.id);
+                    if (d && d.close) d.close();
+                  }
+                });
+              }, 60);
+            }
+          }, true);
+          document.addEventListener('pjax:success', function () {
+            setTimeout(rnxCloseAllOpen, 50);
+          });
+          setInterval(function () {
+            document.querySelectorAll('.mdui-dialog').forEach(function (el) {
+              if (!el.classList.contains('mdui-dialog-open') && el.style.display !== 'none') {
+                el.style.display = 'none';
+              }
+            });
+            if (!document.querySelector('.mdui-dialog-open') && document.querySelector('.mdui-overlay-show')) {
+              document.querySelectorAll('.mdui-overlay-show').forEach(function (o) {
+                o.classList.remove('mdui-overlay-show');
+              });
+            }
+          }, 1500);
+        }
+        function rnxWatermark() {
+          var thVer = document.getElementById('rnx_theme_ver');
+          if (thVer) {
+            var thText = thVer.textContent;
+            if (thText.indexOf('<!--') > -1) thVer.textContent = '—';
+            else if (thText.indexOf('@') > -1) {
+              var thM = thText.match(/@([^\/]+)\//);
+              thVer.textContent = thM ? thM[1] : '—';
+            }
+          }
+          var omVer = document.getElementById('rnx_om_ver');
+          if (omVer && omVer.textContent.indexOf('<!--') > -1) omVer.textContent = '—';
+        }
+        function rnxInjectMenu() {
+          var menu = document.getElementById('admin-menu');
+          if (!menu || menu.getAttribute('data-rnx-items')) return;
+          menu.setAttribute('data-rnx-items', '1');
+          var defs = [
+            { act: 'delete', icon: 'delete', text: '删除' },
+            { act: 'move', icon: 'swap_horiz', text: '移动到' },
+            { act: 'copy', icon: 'content_copy', text: '复制到' },
+            { act: 'rename', icon: 'edit', text: '重命名' }
+          ];
+          defs.forEach(function (d) {
+            var li = document.createElement('li');
+            li.className = 'mdui-menu-item rnx_ctx_li';
+            li.innerHTML = '<a class="mdui-ripple rnx_ctx_item" data-act="' + d.act + '">'
+              + '<i class="mdui-menu-item-icon mdui-icon material-icons">' + d.icon + '</i>' + d.text + '</a>';
+            menu.appendChild(li);
+          });
+        }
+        function rnxInitDom() {
+          rnxInjectMenu();
+          rnxAdmBarUpdate();
+          rnxWatermark();
+          var newEntry = document.getElementById('rnx_new_entry');
+          if (newEntry) newEntry.style.display = document.getElementById('file-list') ? '' : 'none';
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', rnxInitDom);
+        } else {
+          rnxInitDom();
+        }
+        document.addEventListener('pjax:success', rnxInitDom);
+        function rnxGetAllLinks() {
+          rnxCloseAllOpen();
+          var urls = [];
+          document.querySelectorAll('#file-list li .forcedownload a').forEach(function (a) {
+            var h = a.getAttribute('href');
+            if (h) urls.push(new URL(h, location.href).href);
+          });
+          var esc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+          mdui.dialog({
+            title: '全部链接',
+            content: urls.length > 0
+              ? '<div class="mdui-textfield"><textarea class="mdui-textfield-input" readonly rows="8" style="width:100%;resize:vertical">' + esc(urls.join('\n')) + '</textarea></div>'
+              : '<div class="mdui-typo">当前目录没有可复制的文件链接</div>',
+            buttons: [
+              { text: '复制', onClick: function () { rnxCopyText(urls.join('\n')); } },
+              { text: '确定', onClick: function () {} }
+            ]
+          });
+        }
+        rnxBind('rnx_del_ok', function () {
+          rnxCloseDialog('rnx_del_dialog');
+          rnxAdmSeq(rnxDelItems, function (it) {
+            return 'delete_name=' + encodeURIComponent(it.name) + '&delete_fileid=' + encodeURIComponent(it.id || '');
+          }, '删除', function () { location.reload(); });
+        });
+        rnxBind('rnx_cpy_ok', rnxBrowseConfirm);
+        rnxBind('rnx_cpy_up', rnxBrowseUp);
+        rnxBind('rnx_ren_ok', function () {
+          var nv = document.getElementById('rnx_ren_input').value.trim();
+          if (!nv || nv == rnxRenItem.name) { rnxCloseDialog('rnx_ren_dialog'); return; }
+          rnxCloseDialog('rnx_ren_dialog');
+          rnxAdmPost('rename_oldname=' + encodeURIComponent(rnxRenItem.name)
+            + '&rename_newname=' + encodeURIComponent(nv)
+            + '&rename_fileid=' + encodeURIComponent(rnxRenItem.id || ''), function (err) {
+            if (err) { mdui.alert(err, '重命名'); return; }
+            location.reload();
+          });
+        });
+        rnxBind('rnx_mov_ok', rnxBrowseConfirm);
+        rnxBind('rnx_mov_up', rnxBrowseUp);
+        rnxBind('rnx_new_entry', rnxOpenNew);
+        rnxBind('rnx_new_ok', function () {
+          var nameEl = document.getElementById('rnx_new_name');
+          var nv = nameEl ? nameEl.value.trim() : '';
+          if (!nv) { mdui.alert('请输入名称', '新建'); return; }
+          var radio = document.querySelector('#rnx_new_dialog input[name="rnx_new_type"]:checked');
+          var type = radio ? radio.value : 'folder';
+          var fidEl = document.getElementById('rnx_cur_folderid');
+          var fid = fidEl ? fidEl.getAttribute('data-id') : '';
+          if (fid && fid.charAt(0) === '<') fid = '';
+          var content = '';
+          if (type === 'file') {
+            var contentEl = document.getElementById('rnx_new_content');
+            if (contentEl) content = contentEl.value;
+          }
+          rnxCloseDialog('rnx_new_dialog');
+          rnxAdmPost('create_name=' + encodeURIComponent(nv)
+            + '&create_type=' + encodeURIComponent(type)
+            + '&create_fileid=' + encodeURIComponent(fid)
+            + '&create_text=' + encodeURIComponent(content), function (err) {
+            if (err) { mdui.alert(err, '新建'); return; }
+            location.reload();
+          });
+        });
+        rnxBind('rnx_bar_download', function () {
+          var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
+          if (items.length < 1) { mdui.alert('仅文件可下载'); return; }
+          items.forEach(function (it, idx) {
+            setTimeout(function () {
+              var a = document.createElement('a');
+              a.href = new URL(it.url, location.href).href;
+              a.download = '';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }, idx * 250);
+          });
+        });
+        rnxBind('rnx_bar_delete', function () { rnxOpenDel(rnxAdmSel()); });
+        rnxBind('rnx_bar_move', function () { rnxOpenMov(rnxAdmSel()); });
+        rnxBind('rnx_bar_rename', function () {
+          var s = rnxAdmSel();
+          if (s.length != 1) { mdui.alert('请只选择一个文件'); return; }
+          rnxOpenRen(s[0]);
+        });
+        rnxBind('rnx_bar_link', function () {
+          var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
+          if (items.length < 1) { mdui.alert('仅文件可获取链接'); return; }
+          rnxCopyText(items.map(function (it) { return new URL(it.url, location.href).href; }).join('\n'));
+        });
+        document.addEventListener('change', function (e) {
+          if (e.target && e.target.classList && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
+        });
+        document.addEventListener('change', function (e) {
+          if (e.target && e.target.name === 'rnx_new_type') {
+            var wrap = document.getElementById('rnx_new_content_wrap');
+            if (wrap) wrap.style.display = e.target.value === 'file' ? '' : 'none';
+          }
+        });
+        rnxAdmBarUpdate();
+      })();
+    </script>
     <!--GuestUpEnd-->
 </body>
 
@@ -932,6 +1008,12 @@
           class="mdui-list-item-content"><!--constStr@Upload--></a>
       </li>
       <!--UploadJsEnd-->
+      <!--GuestUpStart-->
+      <li class="mdui-list-item mdui-ripple" id="rnx_new_entry">
+        <a class="mdui-list-item-icon mdui-icon material-icons">create_new_folder</a><a
+          class="mdui-list-item-content">新建文件/文件夹</a>
+      </li>
+      <!--GuestUpEnd-->
       <!--MultiDiskAreaStart-->
       <div class="mdui-divider"></div>
       <!--MultiDisksStart-->
@@ -977,6 +1059,7 @@
     </div>
   </div>
   <div class="mdui-container" style="position: relative;">
+    <span id="rnx_cur_folderid" data-id="<!--FolderId-->" style="display:none"></span>
     <ul class="mdui-menu" id="admin-menu">
       <li class="mdui-menu-item">
         <a href="javascript:;" class="mdui-ripple back">
@@ -2004,3 +2087,4 @@
 
 <!--customScript-->
 </html>
+

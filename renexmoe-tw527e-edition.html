@@ -428,6 +428,38 @@
       </div>
     </div>
 
+    <div class="mdui-dialog" id="rnx_new_dialog">
+      <div class="mdui-dialog-title"><i class="mdui-icon material-icons">create_new_folder</i>&nbsp;新建</div>
+      <div class="mdui-dialog-content">
+        <div class="mdui-textfield mdui-textfield-floating-label">
+          <i class="mdui-icon material-icons">edit</i>
+          <label class="mdui-textfield-label">名称</label>
+          <input class="mdui-textfield-input" id="rnx_new_name" type="text" maxlength="255" autocomplete="off">
+        </div>
+        <div style="padding: 6px 0 4px 0">
+          <label class="mdui-radio">
+            <input type="radio" name="rnx_new_type" value="folder" checked>
+            <i class="mdui-radio-icon"></i>新建文件夹
+          </label>
+          <label class="mdui-radio" style="margin-left: 24px">
+            <input type="radio" name="rnx_new_type" value="file">
+            <i class="mdui-radio-icon"></i>新建文件
+          </label>
+        </div>
+        <div id="rnx_new_content_wrap" style="display:none">
+          <div class="mdui-textfield mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">notes</i>
+            <label class="mdui-textfield-label">文件内容（可选）</label>
+            <textarea class="mdui-textfield-input" id="rnx_new_content" rows="5"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="mdui-dialog-actions">
+        <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+        <button class="mdui-btn mdui-ripple" id="rnx_new_ok">新建</button>
+      </div>
+    </div>
+
     <script>
       (function () {
         var rnxCtxItem = null;
@@ -590,6 +622,19 @@
         function rnxOpenMov(items) {
           rnxBrowseOpen('mov', items);
         }
+        function rnxOpenNew() {
+          var nameEl = document.getElementById('rnx_new_name');
+          if (nameEl) nameEl.value = '';
+          var contentEl = document.getElementById('rnx_new_content');
+          if (contentEl) contentEl.value = '';
+          var folderRadio = document.querySelector('#rnx_new_dialog input[value="folder"]');
+          var fileRadio = document.querySelector('#rnx_new_dialog input[value="file"]');
+          if (folderRadio) folderRadio.checked = true;
+          if (fileRadio) fileRadio.checked = false;
+          var wrap = document.getElementById('rnx_new_content_wrap');
+          if (wrap) wrap.style.display = 'none';
+          rnxOpenDialog('rnx_new_dialog');
+        }
         var rnxBrowse = { mode: '', path: '/', stack: [], target: [] };
         function rnxBrowsePathClean(p) {
           if (p == '' || p == '/') return '/';
@@ -744,7 +789,7 @@
           document.addEventListener('click', function (e) {
             if (e.target.closest && e.target.closest('[mdui-dialog]')) {
               setTimeout(function () {
-                document.querySelectorAll('#rnx_del_dialog,#rnx_ren_dialog,#rnx_cpy_dialog,#rnx_mov_dialog').forEach(function (el) {
+                document.querySelectorAll('#rnx_del_dialog,#rnx_ren_dialog,#rnx_cpy_dialog,#rnx_mov_dialog,#rnx_new_dialog').forEach(function (el) {
                   if (el.classList.contains('mdui-dialog-open')) {
                     var d = rnxDialog(el.id);
                     if (d && d.close) d.close();
@@ -804,6 +849,8 @@
           rnxInjectMenu();
           rnxAdmBarUpdate();
           rnxWatermark();
+          var newEntry = document.getElementById('rnx_new_entry');
+          if (newEntry) newEntry.style.display = document.getElementById('file-list') ? '' : 'none';
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', rnxInitDom);
@@ -851,6 +898,30 @@
         });
         rnxBind('rnx_mov_ok', rnxBrowseConfirm);
         rnxBind('rnx_mov_up', rnxBrowseUp);
+        rnxBind('rnx_new_entry', rnxOpenNew);
+        rnxBind('rnx_new_ok', function () {
+          var nameEl = document.getElementById('rnx_new_name');
+          var nv = nameEl ? nameEl.value.trim() : '';
+          if (!nv) { mdui.alert('请输入名称', '新建'); return; }
+          var radio = document.querySelector('#rnx_new_dialog input[name="rnx_new_type"]:checked');
+          var type = radio ? radio.value : 'folder';
+          var fidEl = document.getElementById('rnx_cur_folderid');
+          var fid = fidEl ? fidEl.getAttribute('data-id') : '';
+          if (fid && fid.charAt(0) === '<') fid = '';
+          var content = '';
+          if (type === 'file') {
+            var contentEl = document.getElementById('rnx_new_content');
+            if (contentEl) content = contentEl.value;
+          }
+          rnxCloseDialog('rnx_new_dialog');
+          rnxAdmPost('create_name=' + encodeURIComponent(nv)
+            + '&create_type=' + encodeURIComponent(type)
+            + '&create_fileid=' + encodeURIComponent(fid)
+            + '&create_text=' + encodeURIComponent(content), function (err) {
+            if (err) { mdui.alert(err, '新建'); return; }
+            location.reload();
+          });
+        });
         rnxBind('rnx_bar_download', function () {
           var items = rnxAdmSel().filter(function (x) { return x.type == 'file'; });
           if (items.length < 1) { mdui.alert('仅文件可下载'); return; }
@@ -879,6 +950,12 @@
         });
         document.addEventListener('change', function (e) {
           if (e.target && e.target.classList && e.target.classList.contains('rnx_ck')) rnxAdmBarUpdate();
+        });
+        document.addEventListener('change', function (e) {
+          if (e.target && e.target.name === 'rnx_new_type') {
+            var wrap = document.getElementById('rnx_new_content_wrap');
+            if (wrap) wrap.style.display = e.target.value === 'file' ? '' : 'none';
+          }
         });
         rnxAdmBarUpdate();
       })();
@@ -931,6 +1008,12 @@
           class="mdui-list-item-content"><!--constStr@Upload--></a>
       </li>
       <!--UploadJsEnd-->
+      <!--GuestUpStart-->
+      <li class="mdui-list-item mdui-ripple" id="rnx_new_entry">
+        <a class="mdui-list-item-icon mdui-icon material-icons">create_new_folder</a><a
+          class="mdui-list-item-content">新建文件/文件夹</a>
+      </li>
+      <!--GuestUpEnd-->
       <!--MultiDiskAreaStart-->
       <div class="mdui-divider"></div>
       <!--MultiDisksStart-->
@@ -976,6 +1059,7 @@
     </div>
   </div>
   <div class="mdui-container" style="position: relative;">
+    <span id="rnx_cur_folderid" data-id="<!--FolderId-->" style="display:none"></span>
     <ul class="mdui-menu" id="admin-menu">
       <li class="mdui-menu-item">
         <a href="javascript:;" class="mdui-ripple back">
