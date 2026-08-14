@@ -706,6 +706,8 @@
           var area = document.getElementById('rnx_fav_area');
           var list = document.getElementById('rnx_fav_list');
           if (area) area.style.display = rnxFavList.length > 0 ? '' : 'none';
+          var endDiv = document.getElementById('rnx_fav_div_end');
+          if (endDiv) endDiv.style.display = (rnxFavList.length > 0 && !document.querySelector('#main-drawer .disk_name')) ? '' : 'none';
           if (!list) return;
           list.innerHTML = '';
           rnxFavList.forEach(function (f, idx) {
@@ -1255,6 +1257,7 @@
       <div id="rnx_fav_area" style="display:none">
         <div class="mdui-divider"></div>
         <ul id="rnx_fav_list" style="margin:0;padding:0;list-style:none"></ul>
+        <div class="mdui-divider" id="rnx_fav_div_end"></div>
       </div>
       <!--GuestUpEnd-->
       <!--MultiDiskAreaStart-->
